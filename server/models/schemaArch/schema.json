@@ -1,0 +1,125 @@
+{
+    "_id": "ObjectId",
+    "firstName": "String",
+    "lastName": "String",
+    "email": "String",
+    "password": "String",
+    "avatarUrl": "String",
+    "createdAt": "Date",
+    "updatedAt": "Date",
+    "projects": [
+        {
+            "_id": "ObjectId",
+            "name": "Inbox",
+            "color": "gray",
+            "userId": "ObjectId",
+            "isFavorite": false,
+            "isInbox": true,
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "tasks": [
+                {
+                    "_id": "ObjectId",
+                    "content": "Buy groceries",
+                    "description": "Milk, eggs, bread",
+                    "ownerId": "ObjectId",
+                    "projectId": "ObjectId",
+                    "priority": 3,
+                    "dueDate": "2025-07-24",
+                    "dueTime": "18:00",
+                    "isCompleted": false,
+                    "order": 1,
+                    "tags": [
+                        "home",
+                        "urgent"
+                    ],
+                    "parentId": null,
+                    "createdAt": "Date",
+                    "updatedAt": "Date"
+                },
+                {
+                    "_id": "ObjectId",
+                    "content": "Read a book",
+                    "description": "",
+                    "ownerId": "ObjectId",
+                    "projectId": "ObjectId",
+                    "priority": 1,
+                    "dueDate": null,
+                    "dueTime": null,
+                    "isCompleted": false,
+                    "order": 2,
+                    "tags": [],
+                    "parentId": null,
+                    "createdAt": "Date",
+                    "updatedAt": "Date"
+                }
+            ]
+        },
+        {
+            "_id": "ObjectId",
+            "name": "Work",
+            "color": "blue",
+            "userId": "ObjectId",
+            "isFavorite": true,
+            "isInbox": false,
+            "createdAt": "Date",
+            "updatedAt": "Date",
+            "tasks": [
+                {
+                    "_id": "ObjectId",
+                    "content": "Finish presentation",
+                    "description": "Slides for team meeting",
+                    "ownerId": "ObjectId",
+                    "projectId": "ObjectId",
+                    "priority": 4,
+                    "dueDate": "2025-07-25",
+                    "dueTime": "09:00",
+                    "isCompleted": false,
+                    "order": 1,
+                    "tags": [
+                        "work",
+                        "meeting"
+                    ],
+                    "parentId": null,
+                    "createdAt": "Date",
+                    "updatedAt": "Date",
+                    "subtasks": [
+                        {
+                            "_id": "ObjectId",
+                            "content": "Design slides",
+                            "description": "",
+                            "ownerId": "ObjectId",
+                            "projectId": "ObjectId",
+                            "priority": 2,
+                            "dueDate": "2025-07-24",
+                            "dueTime": "16:00",
+                            "isCompleted": false,
+                            "order": 1,
+                            "parentId": "ObjectId",
+                            "createdAt": "Date",
+                            "updatedAt": "Date"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "activityLog": [
+        {
+            "_id": "ObjectId",
+            "userId": "ObjectId",
+            "action": "created task",
+            "targetType": "task",
+            "targetId": "ObjectId",
+            "createdAt": "Date"
+        },
+        {
+            "_id": "ObjectId",
+            "userId": "ObjectId",
+            "action": "completed task",
+            "targetType": "task",
+            "targetId": "ObjectId",
+            "createdAt": "Date"
+        }
+    ]
+}
