@@ -7,6 +7,10 @@ import ProjectCard from '../../components/common/ProjectCard';
 import ProjectTasksPage from './ProjectTasksPage';
 import { useProjects } from '../../hooks/useProjects'; // Import the new hook
 
+/**
+ * Projects page component to display and manage user projects.
+ * It uses the `useProjects` hook for data management and interactions.
+ */
 const Projects = () => {
     // Use the custom hook for project data and API interactions
     const {
@@ -17,12 +21,12 @@ const Projects = () => {
         handleCreateProject,
         handleUpdateProject,
         handleDeleteProjectConfirmed,
-        toggleFavorite,
+        toggleFavorite, // This now correctly triggers refetchFavoriteProjects internally via useProjects hook
         handleProjectCardClick,
         handleBackToProjects,
     } = useProjects();
 
-    // State for modals
+    // State for managing modal visibility and data
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -71,6 +75,9 @@ const Projects = () => {
         <div className="md:ml-72 mt-8 px-4 py-6">
             <div className="fixed top-0 left-0 right-0 md:left-72 z-10 bg-[color:var(--color-background)]/50 px-4 py-6 flex items-center justify-between backdrop-blur-md">
                 <div className='flex items-center gap-2'>
+                    {/* Back button for mobile view when viewing tasks - currently hidden if selectedProjectForTasks is null */}
+                    {/* This button's visibility is tied to selectedProjectForTasks, so it won't show on the main projects list */}
+                    {/* If you want a back button on the main projects list for mobile, its logic needs to be outside this conditional render. */}
                     <button className="p-1 rounded-full hover:bg-[color:var(--color-hover)]/10 transition-colors mr-2 block md:hidden" aria-label="Back to Projects">
                         <ArrowLeft className="w-6 h-6 text-[color:var(--color-text)]" />
                     </button>
@@ -101,7 +108,7 @@ const Projects = () => {
                             <ProjectCard
                                 key={project._id}
                                 project={project}
-                                onToggleFavorite={toggleFavorite}
+                                onToggleFavorite={toggleFavorite} // This now correctly triggers the refetch via useProjects
                                 onEditProject={(projectToEdit) => {
                                     setEditingProject(projectToEdit);
                                     setOpenDropdownId(null); // Close dropdown
