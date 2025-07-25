@@ -43,7 +43,7 @@ const ProjectCard = ({
     return (
         <li
             key={project._id}
-            className="p-4 rounded-lg shadow-sm flex items-center justify-between gap-4 bg-white border border-gray-200 cursor-pointer transition-colors hover:bg-gray-100" // Added cursor-pointer
+            className="p-4 rounded-lg shadow-sm flex items-center justify-between gap-4 bg-white border border-gray-200 dark:bg-zinc-800 dark:text-white dark:border-zinc-700 dark:hover:bg-zinc-700 cursor-pointer transition-colors hover:bg-gray-100" // Added cursor-pointer
             onClick={() => onProjectClick && onProjectClick(project)} // Handle card click
         >
             <div className="flex items-center gap-4">
@@ -62,7 +62,7 @@ const ProjectCard = ({
                             e.stopPropagation(); // Prevent card click when clicking favorite
                             onToggleFavorite(project);
                         }}
-                        className={`p-1 rounded-full transition-colors ${project.isFavorite ? 'text-yellow-500 hover:bg-yellow-100' : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-100'}`}
+                        className={`p-1 rounded-full transition-colors ${project.isFavorite ? 'text-yellow-500 hover:bg-yellow-100' : 'text-gray-400 hover:text-yellow-600 hover:bg-gray-100 dark:hover:bg-zinc-600'}`}
                         aria-label={project.isFavorite ? 'Unfavorite project' : 'Favorite project'}
                     >
                         <Star size={20} fill={project.isFavorite ? 'currentColor' : 'none'} />
@@ -76,21 +76,21 @@ const ProjectCard = ({
                             e.stopPropagation(); // Stop propagation to prevent listItem click events if any
                             setOpenDropdownId(openDropdownId === project._id ? null : project._id);
                         }}
-                        className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                        className="p-1 rounded-full hover:bg-gray-200 transition-colors dark:hover:bg-zinc-600"
                         aria-label="Project options"
                     >
                         <MoreVertical size={20} />
                     </button>
                     {/* Dropdown Menu */}
                     {openDropdownId === project._id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10 py-1">
+                        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 dark:bg-zinc-700 dark:text-white dark:border-zinc-700 rounded-md shadow-lg z-10 py-1">
                             {onEditProject && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation(); // Prevent card click
                                         onEditProject(project);
                                     }}
-                                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-zinc-600"
                                 >
                                     <Edit size={16} /> Edit
                                 </button>
@@ -101,7 +101,7 @@ const ProjectCard = ({
                                         e.stopPropagation(); // Prevent card click
                                         onConfirmDelete(project);
                                     }}
-                                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-zinc-600"
                                 >
                                     <Trash2 size={16} /> Delete
                                 </button>

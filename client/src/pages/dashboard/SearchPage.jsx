@@ -152,7 +152,7 @@ const SearchPage = () => {
                 <input
                     type="text"
                     placeholder="Search by content or tags..."
-                    className="flex-grow border p-3 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-grow border p-3 rounded-lg shadow-sm border-gray-300 dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />

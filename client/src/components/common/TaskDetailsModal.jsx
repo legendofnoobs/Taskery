@@ -6,18 +6,18 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
     if (!isOpen || !task) return null; // Don't render if not open or no task provided
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:text-white dark:bg-zinc-800 rounded-lg p-6 w-full max-w-md relative shadow-xl">
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                    className="absolute top-3 right-3 text-gray-500 dark:text-white dark:hover:text-gray-400 hover:text-gray-700"
                     aria-label="Close details"
                 >
                     <X size={24} />
                 </button>
                 <h2 className="text-2xl font-bold mb-4">Task Details</h2>
 
-                <div className="space-y-3 text-gray-800">
+                <div className="space-y-3 text-gray-800 dark:text-white">
                     <p><strong>Content:</strong> {task.content}</p>
                     {task.description && <p><strong>Description:</strong> {task.description}</p>}
                     <p>
@@ -61,12 +61,12 @@ const TaskDetailsModal = ({ isOpen, onClose, task }) => {
                         </div>
                     )}
                     {task.createdAt && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-zinc-400">
                             Created: {new Date(task.createdAt).toLocaleString()}
                         </p>
                     )}
                     {task.updatedAt && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-zinc-400">
                             Last Updated: {new Date(task.updatedAt).toLocaleString()}
                         </p>
                     )}

@@ -10,10 +10,11 @@ import ActivityLog from './pages/dashboard/ActivityLog'
 import SearchPage from './pages/dashboard/SearchPage'
 import Settings from './pages/dashboard/Settings'
 import Projects from './pages/dashboard/Projects'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
     return (
-        <div className="font-sans text-gray-800">
+        <div className="text-gray-800 dark:text-white dark:bg-zinc-900">
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<Login />} />
@@ -28,6 +29,12 @@ function App() {
                     <Route path="projects" element={<Projects />} />
                 </Route>
             </Routes>
+            <Toaster
+                position="bottom-right"
+                toastOptions={{
+                    style: { fontSize: '0.9rem' }
+                }}
+            />
         </div>
     )
 }

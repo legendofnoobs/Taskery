@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { BadgePlus, Cog, FileClock, FolderKanban, Inbox, LogOut, Menu, Search, Star, X } from 'lucide-react' // Import Star icon
 import CreateTaskModal from '../common/CreateTaskModal' // Import the CreateTaskModal
 import axios from 'axios' // Import axios for task creation and project fetching
+import toast from 'react-hot-toast'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -34,7 +35,9 @@ const Sidebar = () => {
             await axios.post(`${API_URL}/tasks`, taskData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setShowCreateModal(false); // Close modal on success
+            setShowCreateModal(false);
+            toast.success('Added Task!')
+            // Close modal on success
             // Optionally, you might want to refetch tasks in relevant pages after creation
             // For example, if you are currently on the Inbox page, you might want to trigger a refresh there.
             // This would typically be handled with a global state update or a specific context/hook.
@@ -78,7 +81,7 @@ const Sidebar = () => {
         <>
             {/* Toggle Button */}
             <button
-                className="md:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded shadow-md"
+                className="md:hidden fixed top-5 left-4 z-50 bg-white text-black dark:bg-zinc-700 dark:text-white p-2 rounded shadow-md"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -86,7 +89,7 @@ const Sidebar = () => {
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-0 left-0 z-40 h-full w-72 bg-[#EAEAEA] inset-shadow-sm inset-shadow-zinc-500 transform transition-transform duration-300 ease-in-out
+                className={`fixed top-0 left-0 z-40 h-full w-72 bg-[#EAEAEA] dark:text-white dark:bg-zinc-800 border-r border-zinc-700 transform transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
             >
                 <div className="p-4 space-y-4 flex flex-col h-full justify-between">
@@ -100,19 +103,19 @@ const Sidebar = () => {
                         </button>
 
                         <nav className="mt-6 space-y-2 text-gray-700">
-                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors" onClick={() => navigate('/dashboard/search')}>
+                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-zinc-700 dark:text-white transition-colors" onClick={() => {navigate('/dashboard/search'); setIsOpen(false)} }>
                                 <Search /> Search
                             </button>
-                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors" onClick={() => navigate('/dashboard/inbox')}>
+                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-zinc-700 dark:text-white transition-colors" onClick={() => {navigate('/dashboard/inbox'); setIsOpen(false)}}>
                                 <Inbox /> Inbox
                             </button>
-                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors" onClick={() => navigate('/dashboard/projects')}>
+                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-zinc-700 dark:text-white transition-colors" onClick={() => {navigate('/dashboard/projects'); setIsOpen(false)}}>
                                 <FolderKanban /> Projects
                             </button>
-                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors" onClick={() => navigate('/dashboard/activity-log')}>
+                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-zinc-700 dark:text-white transition-colors" onClick={() => {navigate('/dashboard/activity-log'); setIsOpen(false)}}>
                                 <FileClock /> Activity Log
                             </button>
-                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-gray-100 transition-colors" onClick={() => navigate('/dashboard/settings')}>
+                            <button className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded hover:bg-zinc-700 dark:text-white transition-colors" onClick={() => {navigate('/dashboard/settings'); setIsOpen(false)}}>
                                 <Cog /> Settings
                             </button>
                             <div className="mt-4">
@@ -126,7 +129,7 @@ const Sidebar = () => {
                                         favoriteProjects.map(project => (
                                             <li key={project._id}>
                                                 <button
-                                                    className="flex items-center gap-x-2 w-full text-left px-3 py-1 hover:bg-gray-100 rounded transition-colors"
+                                                    className="flex items-center gap-x-2 w-full text-left px-3 py-1 hover:bg-zinc-700 dark:text-white rounded transition-colors"
                                                     onClick={() => {
                                                         // Navigate to a project-specific tasks page
                                                         // You'll need to set up a route like /dashboard/projects/:id
@@ -145,7 +148,7 @@ const Sidebar = () => {
                         </nav>
                     </div>
 
-                    <div className="text-sm text-gray-600 border-t border-gray-400 pt-4">
+                    <div className="text-sm text-gray-600 dark:text-white border-t border-gray-400 pt-4">
                         {user && (
                             <div className="mb-3 flex items-center">
                                 <div>
@@ -153,7 +156,7 @@ const Sidebar = () => {
                                 </div>
                                 <div>
                                     <div className="font-semibold">{user.firstName} {user.lastName}</div>
-                                    <div className="text-xs text-gray-500">{user.email}</div>
+                                    <div className="text-xs text-gray-500 dark:text-zinc-400">{user.email}</div>
                                 </div>
                             </div>
                         )}

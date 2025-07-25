@@ -318,22 +318,22 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId }) =
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-zinc-800 rounded-lg p-6 w-full max-w-md relative shadow-xl">
                 <h2 className="text-xl font-semibold mb-4">Add New Task</h2>
 
                 {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
 
                 <input
                     type="text"
-                    placeholder="Task content"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded"
+                    placeholder="Task Title"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
                     value={content}
                     onChange={e => setContent(e.target.value)}
                 />
                 <textarea
                     placeholder="Description"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
                     rows="3"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
@@ -341,31 +341,31 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId }) =
                 <input
                     type="text"
                     placeholder="Tags (comma separated)"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
                     value={tags}
                     onChange={e => setTags(e.target.value)}
                 />
                 <input
                     type="date"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
                 />
                 <select
-                    className="w-full border border-gray-300 p-2 mb-3 rounded"
+                    className="w-full border border-gray-300 dark:bg-zinc-800 p-2 mb-3 rounded dark:border-zinc-700"
                     value={priority}
                     onChange={e => setPriority(Number(e.target.value))}
                 >
-                    <option value={1}>Low</option>
-                    <option value={2}>Medium</option>
-                    <option value={3}>High</option>
-                    <option value={4}>Urgent</option>
+                    <option value={1} className='dark:text-white'>Low</option>
+                    <option value={2} className='dark:text-white'>Medium</option>
+                    <option value={3} className='dark:text-white'>High</option>
+                    <option value={4} className='dark:text-white'>Urgent</option>
                 </select>
 
                 {/* Conditional rendering of project selection */}
                 {!defaultProjectId && (
                     <select
-                        className="w-full border border-gray-300 p-2 mb-4 rounded"
+                        className="w-full border dark:border-zinc-700 dark:bg-zinc-800 border-gray-300 p-2 mb-4 rounded"
                         value={selectedProjectId}
                         onChange={e => setSelectedProjectId(e.target.value)}
                         disabled={loading} // Disable during loading
@@ -387,7 +387,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId }) =
                 <div className="flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                        className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 dark:bg-zinc-700 dark:hover:bg-zinc-600"
                     >
                         Cancel
                     </button>

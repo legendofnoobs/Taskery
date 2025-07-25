@@ -52,16 +52,16 @@ const EditProjectModal = ({ isOpen, onClose, project, onUpdate }) => {
     if (!isOpen || !project) return null; // Ensure project data is available when modal is open
 
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4 dark:bg-zinc-800 dark:text-white">
                 <h2 className="text-2xl font-bold mb-4">Edit Project</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="editProjectName" className="block text-sm font-medium text-gray-700">Project Name</label>
+                        <label htmlFor="editProjectName" className="block text-sm font-medium dark:text-white text-gray-700">Project Name</label>
                         <input
                             type="text"
                             id="editProjectName"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 block w-full border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g., Work Tasks, Personal Goals"
@@ -73,10 +73,10 @@ const EditProjectModal = ({ isOpen, onClose, project, onUpdate }) => {
                         )}
                     </div>
                     <div>
-                        <label htmlFor="editProjectColor" className="block text-sm font-medium text-gray-700">Project Color</label>
+                        <label htmlFor="editProjectColor" className="block text-sm font-medium dark:text-white text-gray-700">Project Color</label>
                         <select
                             id="editProjectColor"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 block w-full border border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
                             value={color}
                             onChange={(e) => setColor(e.target.value)}
                             disabled={loading || project.isInbox} // Disable editing color for Inbox
@@ -98,7 +98,7 @@ const EditProjectModal = ({ isOpen, onClose, project, onUpdate }) => {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-zinc-700 dark:bg-zinc-600 dark:text-white transition-colors"
                             disabled={loading}
                         >
                             Cancel

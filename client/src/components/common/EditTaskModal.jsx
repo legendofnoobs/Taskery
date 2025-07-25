@@ -79,29 +79,29 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
     if (!isOpen) return null
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-xl dark:bg-zinc-800">
                 <h2 className="text-xl font-semibold mb-4">Edit Task</h2>
                 {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
 
-                <input className="w-full border border-gray-300 p-2 mb-3 rounded" value={content} onChange={e => setContent(e.target.value)} placeholder="Task content" />
-                <textarea className="w-full border border-gray-300 p-2 mb-3 rounded" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
-                <input className="w-full border border-gray-300 p-2 mb-3 rounded" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags (comma separated)" />
-                <input type="date" className="w-full border border-gray-300 p-2 mb-3 rounded" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-                <select className="w-full border border-gray-300 p-2 mb-3 rounded" value={priority} onChange={e => setPriority(Number(e.target.value))}>
+                <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={content} onChange={e => setContent(e.target.value)} placeholder="Task content" />
+                <textarea className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
+                <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags (comma separated)" />
+                <input type="date" className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                <select className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 dark:bg-zinc-800" value={priority} onChange={e => setPriority(Number(e.target.value))}>
                     <option value={1}>Low</option>
                     <option value={2}>Medium</option>
                     <option value={3}>High</option>
                     <option value={4}>Urgent</option>
                 </select>
-                <select className="w-full border border-gray-300 p-2 mb-4 rounded" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
+                <select className="w-full border border-gray-300 p-2 mb-4 rounded dark:border-zinc-700 dark:bg-zinc-800" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                     {projects.map(p => (
                         <option key={p._id} value={p._id}>{p.name}</option>
                     ))}
                 </select>
 
                 <div className="flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
+                    <button onClick={onClose} className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 dark:bg-zinc-700 dark:hover:bg-zinc-600">Cancel</button>
                     <button onClick={handleUpdate} disabled={loading} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
                         {loading ? 'Updating...' : 'Update'}
                     </button>
