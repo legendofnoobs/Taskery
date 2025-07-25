@@ -84,17 +84,17 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
                 <h2 className="text-xl font-semibold mb-4">Edit Task</h2>
                 {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
 
-                <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={content} onChange={e => setContent(e.target.value)} placeholder="Task content" />
-                <textarea className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
-                <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags (comma separated)" />
-                <input type="date" className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-                <select className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 dark:bg-zinc-800" value={priority} onChange={e => setPriority(Number(e.target.value))}>
+                <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={content} onChange={e => setContent(e.target.value)} placeholder="Task content" />
+                <textarea className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
+                <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags (comma separated)" />
+                <input type="date" className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                <select className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 dark:bg-zinc-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={priority} onChange={e => setPriority(Number(e.target.value))}>
                     <option value={1}>Low</option>
                     <option value={2}>Medium</option>
                     <option value={3}>High</option>
                     <option value={4}>Urgent</option>
                 </select>
-                <select className="w-full border border-gray-300 p-2 mb-4 rounded dark:border-zinc-700 dark:bg-zinc-800" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
+                <select className="w-full border border-gray-300 p-2 mb-4 rounded dark:border-zinc-700 dark:bg-zinc-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                     {projects.map(p => (
                         <option key={p._id} value={p._id}>{p.name}</option>
                     ))}

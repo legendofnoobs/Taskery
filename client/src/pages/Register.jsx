@@ -1,4 +1,3 @@
-// src/pages/Register.jsx
 import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +6,7 @@ const Register = () => {
     const { register, error } = useAuth();
     const navigate = useNavigate();
     const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });
+    const [loading, setLoading] = useState(false); // Add loading state for button
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -14,78 +14,135 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true); // Set loading to true on submission
         try {
             await register(form.firstName, form.lastName, form.email, form.password);
-            navigate('/dashboard');
+            navigate('/dashboard/inbox'); // Navigate to inbox after successful registration
         } catch (err) {
-            // error is already handled in context
-            console.log(err);
+            // Error is already handled in context, but we log it here for debugging
+            console.error('Registration failed:', err);
+        } finally {
+            setLoading(false); // Set loading to false after submission (success or failure)
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-            <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-                {error && <p className="text-red-600 mb-4">{error}</p>}
-                <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1">First Name</label>
-                    <input
-                        type="text"
-                        name="firstName"
-                        value={form.firstName}
-                        onChange={handleChange}
-                        className="w-full border px-3 py-2 rounded"
-                        required
-                    />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-red-600 p-4 font-inter">
+            {/* Register Card */}
+            <div className="bg-white dark:bg-zinc-800 shadow-2xl rounded-xl p-8 w-full max-w-md transform transition-all duration-300">
+                {/* Title/Logo */}
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+                        Create Account
+                    </h2>
+                    <p className="text-gray-600 dark:text-zinc-300">
+                        Join us and start managing your tasks!
+                    </p>
                 </div>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1">Last Name</label>
-                    <input
-                        type="text"
-                        name="lastName"
-                        value={form.lastName}
-                        onChange={handleChange}
-                        className="w-full border px-3 py-2 rounded"
-                        required
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1">Email</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        className="w-full border px-3 py-2 rounded"
-                        required
-                    />
-                </div>
-                <div className="mb-6">
-                    <label className="block text-sm font-medium mb-1">Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        value={form.password}
-                        onChange={handleChange}
-                        className="w-full border px-3 py-2 rounded"
-                        required
-                    />
-                </div>
-                <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-                    Register
-                </button>
-                <p className="text-center text-sm text-gray-600 mt-4">
+
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+                        <strong className="font-bold">Error!</strong>
+                        <span className="block sm:inline ml-2">{error}</span>
+                    </div>
+                )}
+
+                {/* Register Form */}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+                            First Name
+                        </label>
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            value={form.firstName}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 dark:text-white placeholder-gray-400"
+                            placeholder="John"
+                            required
+                            autoComplete="given-name"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+                            Last Name
+                        </label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={form.lastName}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 dark:text-white placeholder-gray-400"
+                            placeholder="Doe"
+                            required
+                            autoComplete="family-name"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+                            Email address
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 dark:text-white placeholder-gray-400"
+                            placeholder="you@example.com"
+                            required
+                            autoComplete="email"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-1">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            value={form.password}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-zinc-700 dark:text-white placeholder-gray-400"
+                            placeholder="••••••••"
+                            required
+                            autoComplete="new-password"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={loading} // Disable button when loading
+                    >
+                        {loading ? (
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        ) : (
+                            'Register'
+                        )}
+                    </button>
+                </form>
+
+                {/* Login Link */}
+                <p className="text-center text-sm text-gray-600 dark:text-zinc-300 mt-6">
                     Already have an account?{' '}
                     <button
                         type="button"
                         onClick={() => navigate('/login')}
-                        className="text-blue-600 hover:underline font-medium"
+                        className="text-blue-600 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md"
                     >
                         Login
                     </button>
                 </p>
-            </form>
+            </div>
         </div>
     );
 };

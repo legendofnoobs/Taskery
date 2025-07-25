@@ -327,13 +327,13 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId }) =
                 <input
                     type="text"
                     placeholder="Task Title"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={content}
                     onChange={e => setContent(e.target.value)}
                 />
                 <textarea
                     placeholder="Description"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     rows="3"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
@@ -341,18 +341,18 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId }) =
                 <input
                     type="text"
                     placeholder="Tags (comma separated)"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={tags}
                     onChange={e => setTags(e.target.value)}
                 />
                 <input
                     type="date"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700"
+                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
                 />
                 <select
-                    className="w-full border border-gray-300 dark:bg-zinc-800 p-2 mb-3 rounded dark:border-zinc-700"
+                    className="w-full border border-gray-300 dark:bg-zinc-800 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={priority}
                     onChange={e => setPriority(Number(e.target.value))}
                 >

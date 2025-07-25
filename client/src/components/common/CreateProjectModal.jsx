@@ -55,7 +55,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
                         <input
                             type="text"
                             id="projectName"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:border-zinc-700"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:border-zinc-700"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g., Work Tasks, Personal Goals"
@@ -67,7 +67,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
                         <label htmlFor="projectColor" className="block text-sm dark:text-white font-medium text-gray-700">Project Color</label>
                         <select
                             id="projectColor"
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:border-zinc-700 dark:bg-zinc-800"
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:border-zinc-700 dark:bg-zinc-800"
                             value={color}
                             onChange={(e) => setColor(e.target.value)}
                             disabled={loading}

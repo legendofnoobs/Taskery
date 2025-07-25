@@ -43,7 +43,7 @@ const ProjectCard = ({
     return (
         <li
             key={project._id}
-            className="p-4 rounded-lg shadow-sm flex items-center justify-between gap-4 bg-white border border-gray-200 dark:bg-zinc-800 dark:text-white dark:border-zinc-700 dark:hover:bg-zinc-700 cursor-pointer transition-colors hover:bg-gray-100" // Added cursor-pointer
+            className="p-4 rounded-lg shadow-sm flex items-center justify-between gap-4 bg-white border border-gray-200 dark:bg-zinc-800 dark:text-white dark:border-zinc-700 dark:hover:bg-neutral-700 cursor-pointer transition hover:bg-gray-100 hover:shadow-[0px_0px_20px_5px_rgb(66,135,245,0.1)]" // Added cursor-pointer
             onClick={() => onProjectClick && onProjectClick(project)} // Handle card click
         >
             <div className="flex items-center gap-4">

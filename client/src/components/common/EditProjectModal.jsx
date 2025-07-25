@@ -61,7 +61,7 @@ const EditProjectModal = ({ isOpen, onClose, project, onUpdate }) => {
                         <input
                             type="text"
                             id="editProjectName"
-                            className="mt-1 block w-full border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 block w-full border border-gray-300 dark:border-zinc-700 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g., Work Tasks, Personal Goals"
@@ -76,7 +76,7 @@ const EditProjectModal = ({ isOpen, onClose, project, onUpdate }) => {
                         <label htmlFor="editProjectColor" className="block text-sm font-medium dark:text-white text-gray-700">Project Color</label>
                         <select
                             id="editProjectColor"
-                            className="mt-1 block w-full border border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 block w-full border border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 rounded-md shadow-sm p-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             value={color}
                             onChange={(e) => setColor(e.target.value)}
                             disabled={loading || project.isInbox} // Disable editing color for Inbox

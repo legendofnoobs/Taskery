@@ -40,7 +40,7 @@ const TaskCard = ({
     return (
         <li
             key={task._id}
-            className={`p-4 rounded shadow-sm flex flex-row md:items-center justify-between gap-2 bg-white ${task.isCompleted ? 'opacity-60' : ''} dark:text-white dark:bg-zinc-800`}
+            className={`p-4 rounded-xl shadow-sm flex flex-row md:items-center justify-between gap-2 bg-white dark:text-white dark:bg-zinc-800 hover:shadow-[0px_0px_20px_5px_rgb(66,135,245,0.1)] transition-shadow`}
         >
             <div className="flex items-start gap-4">
                 {/* Toggle Complete Button (only if onToggleComplete prop is provided) */}
@@ -111,7 +111,7 @@ const TaskCard = ({
                     </button>
                     {/* Dropdown Menu */}
                     {openDropdownId === task._id && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white dark:text-white dark:bg-zinc-700 rounded-md shadow-lg z-10 py-1">
+                        <div className="absolute right-0 mt-2 w-32 bg-white dark:text-white dark:bg-zinc-700 rounded-md shadow-lg z-30 py-1">
                             {onViewDetails && (
                                 <button
                                     onClick={() => onViewDetails(task)}
