@@ -42,6 +42,9 @@ const InboxPage = () => {
     const dropdownRef = useRef(null);
     const [openDropdownId, setOpenDropdownId] = useState(null);
 
+    const today = new Date();
+    const defaultTodayDate = today.toISOString().split('T')[0]; // Formats as "YYYY-MM-DD"
+
     // Effect to handle clicks outside of any task dropdown menu
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -201,6 +204,7 @@ const InboxPage = () => {
                 onClose={() => setShowCreateModal(false)}
                 onTaskCreated={handleCreateTask}
                 defaultProjectId={selectedProjectId}
+                defaultDueDate={defaultTodayDate} // Pass today's date here
             />
 
             <EditTaskModal

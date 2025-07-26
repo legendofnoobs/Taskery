@@ -42,6 +42,9 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
     const [viewingTask, setViewingTask] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
 
+    const today = new Date();
+    const defaultTodayDate = today.toISOString().split('T')[0]; // Formats as "YYYY-MM-DD"
+
     // State for managing which task's dropdown is open
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const dropdownRef = useRef(null); // Ref to detect clicks outside the dropdown
@@ -201,6 +204,7 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                 onClose={() => setShowCreateModal(false)}
                 onTaskCreated={handleCreateTask}
                 defaultProjectId={project._id} // Pass the current project ID
+                defaultDueDate={defaultTodayDate} // Pass today's date here
             />
 
             <EditTaskModal
