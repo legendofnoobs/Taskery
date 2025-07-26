@@ -1,8 +1,10 @@
+// src/hooks/useInboxTasks.jsx
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/useAuth';
-import useFavoriteProjects from './useFavoriteProjects'; // Import useFavoriteProjects to refetch sidebar favorites
+import useFavoriteProjects from './useFavoriteProjects';
+import { useLocation, useNavigate } from 'react-router-dom'; // <--- NEW IMPORTS
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -15,20 +17,25 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
  */
 export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => {
     const { user } = useAuth();
-    const { refetchProjects: refetchSidebarFavorites } = useFavoriteProjects(); // Get refetch function
+    const { refetchProjects: refetchSidebarFavorites } = useFavoriteProjects();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [inboxProjectId, setInboxProjectId] = useState(null); // State to hold the Inbox project ID
+    const [inboxProjectId, setInboxProjectId] = useState(null);
+    const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null); // <--- NEW STATE
+
+    const location = useLocation(); // <--- NEW
+    const navigate = useNavigate(); // <--- NEW
 
     // Memoized function to fetch the Inbox project ID
     const fetchAndSetInboxProjectId = useCallback(async () => {
-        const currentToken = localStorage.getItem('token'); // Get latest token inside useCallback
+        const currentToken = localStorage.getItem('token');
         if (!user || !currentToken) {
             setInboxProjectId(null);
             setTasks([]);
             setLoading(false);
             setError(null);
+            setSelectedTaskForDetails(null); // <--- Clear selected task
             console.log("useInboxTasks: No user or token, clearing state.");
             return;
         }
@@ -51,59 +58,75 @@ export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => 
             setError(err.response?.data?.message || 'Failed to load inbox project ID.');
             setInboxProjectId(null);
         }
-    }, [user]); // Only depends on 'user' to trigger re-fetch on login/logout
+    }, [user]);
 
     // Memoized function to fetch tasks based on the Inbox project ID and filters
     const fetchTasksForInbox = useCallback(async () => {
-        const currentToken = localStorage.getItem('token'); // Get latest token inside useCallback
+        const currentToken = localStorage.getItem('token');
         if (!inboxProjectId || !currentToken) {
             console.log("useInboxTasks: Cannot fetch tasks - missing inboxProjectId or token.");
             setTasks([]);
             setLoading(false);
+            setSelectedTaskForDetails(null); // <--- Clear selected task
             return;
         }
 
         setLoading(true);
         setError(null);
         try {
-            const params = new URLSearchParams();
-            if (filterDueDate !== 'all') {
-                params.append('dueDate', filterDueDate);
-            }
-            if (filterPriority !== 'all') {
-                params.append('priority', filterPriority);
-            }
+            const queryParams = new URLSearchParams(location.search); // <--- NEW
+            const taskIdFromUrl = queryParams.get('taskId'); // <--- NEW
 
-            const requestUrl = `${API_URL}/tasks/project/${inboxProjectId}?${params.toString()}`;
-            console.log("useInboxTasks: Fetching tasks from:", requestUrl);
-            console.log("useInboxTasks: Filters applied - DueDate:", filterDueDate, "Priority:", filterPriority);
+            if (taskIdFromUrl) {
+                // If a taskId is in the URL, fetch that specific task
+                const res = await axios.get(`${API_URL}/tasks/${taskIdFromUrl}`, { // Assuming /tasks/:id endpoint
+                    headers: { Authorization: `Bearer ${currentToken}` }
+                });
+                setSelectedTaskForDetails(res.data);
+                setTasks([]); // Clear general tasks list when viewing a single task's details
+            } else {
+                // Otherwise, fetch all tasks for the main list
+                const params = new URLSearchParams();
+                if (filterDueDate !== 'all') {
+                    params.append('dueDate', filterDueDate);
+                }
+                if (filterPriority !== 'all') {
+                    params.append('priority', filterPriority);
+                }
 
-            const res = await axios.get(requestUrl, {
-                headers: { Authorization: `Bearer ${currentToken}` }
-            });
-            setTasks(res.data);
-            console.log("useInboxTasks: Tasks fetched successfully:", res.data.length, "tasks.");
+                const requestUrl = `${API_URL}/tasks/project/${inboxProjectId}?${params.toString()}`;
+                console.log("useInboxTasks: Fetching tasks from:", requestUrl);
+                console.log("useInboxTasks: Filters applied - DueDate:", filterDueDate, "Priority:", filterPriority);
+
+                const res = await axios.get(requestUrl, {
+                    headers: { Authorization: `Bearer ${currentToken}` }
+                });
+                setTasks(res.data);
+                setSelectedTaskForDetails(null); // Reset selected task for details
+                console.log("useInboxTasks: Tasks fetched successfully:", res.data.length, "tasks.");
+            }
         } catch (err) {
             console.error('useInboxTasks: Failed to fetch tasks:', err);
             setError(err.response?.data?.message || 'Failed to load tasks.');
             setTasks([]);
+            setSelectedTaskForDetails(null); // Reset selected task for details
         } finally {
             setLoading(false);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [inboxProjectId, filterDueDate, filterPriority, user]); // Depend on all relevant states/props and user for token changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inboxProjectId, filterDueDate, filterPriority, user, location.search]); // Add location.search as a dependency
 
     // Effect 1: Fetch Inbox Project ID when user changes
     useEffect(() => {
         fetchAndSetInboxProjectId();
     }, [fetchAndSetInboxProjectId]);
 
-    // Effect 2: Fetch tasks when Inbox Project ID or filters change
+    // Effect 2: Fetch tasks when Inbox Project ID or filters or URL params change
     useEffect(() => {
-        if (inboxProjectId) { // Only fetch tasks if inboxProjectId is set
+        if (inboxProjectId || location.search.includes('taskId=')) { // Ensure fetch happens if ID is set or taskId is in URL
             fetchTasksForInbox();
         }
-    }, [inboxProjectId, fetchTasksForInbox]);
+    }, [inboxProjectId, fetchTasksForInbox, location.search]);
 
 
     // Handlers for task CRUD operations with seamless UI updates
@@ -118,15 +141,14 @@ export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => 
                 headers: { Authorization: `Bearer ${currentToken}` }
             });
             // Optimistically add the new task to the TOP of the state
-            setTasks(prevTasks => [res.data, ...prevTasks]); // <-- CHANGED HERE
+            setTasks(prevTasks => [res.data, ...prevTasks]);
             toast.success("Task created!");
-            refetchSidebarFavorites(); // Update sidebar if task creation affects project counts
+            refetchSidebarFavorites();
             return true;
         } catch (err) {
             console.error('Failed to create task:', err);
             toast.error(err.response?.data?.message || 'Failed to create task.');
-            // Fallback to re-fetch if optimistic update fails
-            fetchTasksForInbox();
+            fetchTasksForInbox(); // Fallback to re-fetch if optimistic update fails
             return false;
         }
     };
@@ -174,7 +196,6 @@ export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => 
     function diffTask(original, next) {
         const payload = {}
         for (const key of Object.keys(next)) {
-            // skip _id
             if (key === '_id') continue
             if (original[key] !== next[key]) {
                 payload[key] = next[key]
@@ -190,61 +211,59 @@ export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => 
             return false
         }
 
-        // 1) Find the current task in state
-        const curr = tasks.find(t => t._id === updatedTaskFromModal._id)
+        const curr = tasks.find(t => t._id === updatedTaskFromModal._id) || selectedTaskForDetails; // <--- Check selectedTaskForDetails too
         if (!curr) {
             toast.error('Task not found in UI state.')
             return false
         }
 
-        // 2) Build the payload (send only what changed)
         const payload = diffTask(curr, updatedTaskFromModal)
 
-        // Always preserve isCompleted if the modal didn’t send it
         if (payload.isCompleted === undefined) {
             payload.isCompleted = curr.isCompleted
         }
 
-        // If nothing changed, just close modal
         if (Object.keys(payload).length === 0) {
             toast('Nothing to update.')
             return true
         }
 
-        // 3) Optimistic update
         const originalTasks = tasks
+        const originalSelectedTask = selectedTaskForDetails; // <--- Store original selected task for rollback
         const optimisticTask = { ...curr, ...payload }
 
-        setTasks(prev =>
-            prev.map(t => (t._id === curr._id ? optimisticTask : t))
-        )
+        // Optimistically update relevant state
+        if (tasks.find(t => t._id === curr._id)) {
+            setTasks(prev => prev.map(t => (t._id === curr._id ? optimisticTask : t)));
+        }
+        if (selectedTaskForDetails && selectedTaskForDetails._id === curr._id) {
+            setSelectedTaskForDetails(optimisticTask);
+        }
 
         try {
-            // 4) Call API
             const { data: saved } = await axios.put(
                 `${API_URL}/tasks/${curr._id}`,
                 payload,
                 { headers: { Authorization: `Bearer ${currentToken}` } }
             )
 
-            // 5) Sync with server response (just in case backend modified anything)
-            setTasks(prev =>
-                prev.map(t => (t._id === curr._id ? saved : t))
-            )
+            // Sync with server response
+            if (tasks.find(t => t._id === curr._id)) {
+                setTasks(prev => prev.map(t => (t._id === curr._id ? saved : t)));
+            }
+            if (selectedTaskForDetails && selectedTaskForDetails._id === curr._id) {
+                setSelectedTaskForDetails(saved);
+            }
 
             toast.success('Task updated!')
-            // If you *really* want to ensure consistency (e.g., server-side hooks),
-            // uncomment the next line:
-            // await fetchTasksForInbox()
-
             return true
         } catch (err) {
             console.error('Failed to update task:', err)
             toast.error(err.response?.data?.message || 'Failed to update task.')
             // rollback
-            setTasks(originalTasks)
-            // Optionally hard refresh:
-            fetchTasksForInbox?.()
+            setTasks(originalTasks);
+            setSelectedTaskForDetails(originalSelectedTask); // <--- Rollback selected task
+            fetchTasksForInbox?.();
             return false
         }
     }
@@ -258,34 +277,56 @@ export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => 
 
         // Optimistic update (store original for rollback)
         const originalTasks = tasks;
+        const originalSelectedTask = selectedTaskForDetails; // <--- Store original selected task
+
         setTasks(prevTasks => prevTasks.filter(t => t._id !== taskId));
+        if (selectedTaskForDetails && selectedTaskForDetails._id === taskId) {
+            setSelectedTaskForDetails(null); // Clear selected task if it's the one being deleted
+            navigate('/dashboard/inbox', { replace: true }); // Go back to inbox list
+        }
 
         try {
             await axios.delete(`${API_URL}/tasks/${taskId}`, {
                 headers: { Authorization: `Bearer ${currentToken}` }
             });
             toast.success("Task deleted!");
-            // No need to re-fetch if optimistic update was successful and accurate
             return true;
         } catch (err) {
             console.error('Failed to delete task:', err);
             toast.error(err.response?.data?.message || 'Failed to delete task.');
             // Revert optimistic update or re-fetch on failure
             setTasks(originalTasks); // Rollback
+            setSelectedTaskForDetails(originalSelectedTask); // Rollback selected task
             fetchTasksForInbox(); // Fallback re-fetch
             return false;
         }
     };
 
+    // <--- NEW: Handler for clicking a task card to view its details page
+    const handleTaskCardClick = (task) => {
+        setSelectedTaskForDetails(task);
+        navigate(`/dashboard/inbox?taskId=${task._id}`); // Update URL
+    };
+
+    // <--- NEW: Handler to go back to the inbox tasks list
+    const handleBackToInbox = () => {
+        setSelectedTaskForDetails(null);
+        navigate('/dashboard/inbox', { replace: true }); // Clear taskId from URL
+    };
+    // NEW HANDLERS --->
+
     return {
         tasks,
         loading,
         error,
-        selectedProjectId: inboxProjectId, // Expose inbox project ID to the component
+        selectedProjectId: inboxProjectId,
+        selectedTaskForDetails, // <--- EXPOSE NEW STATE
         handleCreateTask,
         toggleComplete,
         handleUpdateTask,
         handleDeleteTaskConfirmed,
+        handleTaskCardClick, // <--- EXPOSE NEW HANDLER
+        handleBackToInbox, // <--- EXPOSE NEW HANDLER
         refetchTasks: fetchTasksForInbox // Provide a way to manually refetch if needed (e.g., after filter change)
     };
 };

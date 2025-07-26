@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { AuthContext } from './useAuth';
 import axios from 'axios';
+import { redirect } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -78,6 +79,7 @@ export const AuthProvider = ({ children }) => {
         delete axios.defaults.headers.common['Authorization'];
         setUser(null);
         setToken(null);
+        redirect('/login');
         setIsAuthenticated(false);
     };
 

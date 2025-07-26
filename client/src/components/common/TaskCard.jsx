@@ -143,7 +143,7 @@ const TaskCard = ({
                         <div className="absolute right-0 mt-2 w-32 bg-white dark:text-white dark:bg-zinc-700 rounded-md shadow-lg z-30 py-1">
                             {onViewDetails && (
                                 <button
-                                    onClick={() => onViewDetails(task)}
+                                    onClick={() => {onViewDetails(task); setOpenDropdownId(null);}}
                                     className="block w-full text-left px-4 py-2 text-sm dark:text-white dark:bg-zinc-700 text-gray-700 hover:bg-gray-100 dark:hover:bg-zinc-600"
                                 >
                                     Details
