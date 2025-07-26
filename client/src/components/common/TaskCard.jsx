@@ -1,30 +1,34 @@
 import React from 'react';
-import { CheckCircle, Circle, MoreVertical, Tag } from 'lucide-react';
+import { CheckCircle, Circle, Edit, MoreVertical, ReceiptText, Tag, Trash2 } from 'lucide-react';
 
 /**
- * Reusable component to display a single task.
+ * Reusable component to display a single task or subtask in a list.
  * It includes content, description, tags, due date, priority, and completion status.
  * It also handles the dropdown menu for task actions (Details, Edit, Delete).
  *
  * @param {object} props - The component props.
  * @param {object} props.task - The task object to display.
  * @param {function} [props.onToggleComplete] - Function to call when the completion status is toggled.
- * @param {function} [props.onViewDetails] - Function to call when "Details" is clicked.
+ * @param {function} [props.onViewDetails] - Function to call when "Details" is clicked in the dropdown. Pass null to hide.
  * @param {function} [props.onEditTask] - Function to call when "Edit" is clicked.
  * @param {function} [props.onConfirmDelete] - Function to call when "Delete" is clicked.
+ * @param {function} [props.onClick] - Function to call when the task card itself is clicked (e.g., to view details).
  * @param {string|null} props.openDropdownId - The ID of the task whose dropdown is currently open.
  * @param {function} props.setOpenDropdownId - Function to set the ID of the currently open dropdown.
  * @param {React.RefObject} props.dropdownRef - Ref object to detect clicks outside the dropdown.
+ * @param {boolean} [props.isSubtask=false] - If true, applies specific styling for subtasks.
  */
 const TaskCard = ({
     task,
     onToggleComplete,
-    onViewDetails,
+    onViewDetails, // Re-added onViewDetails prop
     onEditTask,
     onConfirmDelete,
+    onClick,
     openDropdownId,
     setOpenDropdownId,
-    dropdownRef // Passed from parent to handle click outside
+    dropdownRef,
+    isSubtask = false
 }) => {
     // Determine priority color based on numeric value for text color
     const getPriorityColor = (priority) => {
@@ -69,13 +73,17 @@ const TaskCard = ({
     return (
         <li
             key={task._id}
-            className={`p-4 rounded-xl shadow-sm flex flex-row md:items-center justify-between gap-2 bg-white dark:text-white dark:bg-zinc-800 hover:shadow-[0px_0px_20px_5px_rgb(66,135,245,0.1)] transition-shadow`}
+            className={`p-4 rounded-xl shadow-sm flex flex-row md:items-center dark:bg-zinc-800 justify-between gap-2 bg-white dark:text-white hover:shadow-[0px_0px_20px_5px_rgb(66,135,245,0.1)] transition-shadow ${isSubtask ? 'border-l-2 border-gray-300 dark:border-zinc-600 pl-4' : ''}`}
+            onClick={onClick ? () => onClick(task) : undefined}
         >
             <div className="flex items-start gap-4">
                 {/* Toggle Complete Button (only if onToggleComplete prop is provided) */}
                 {onToggleComplete && (
                     <button
-                        onClick={() => onToggleComplete(task)}
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevent card onClick from firing
+                            onToggleComplete(task);
+                        }}
                         className={`hover:opacity-80 transition-opacity ${getPriorityColor(task.priority)}`}
                         aria-label={task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
                     >
@@ -85,9 +93,9 @@ const TaskCard = ({
 
                 <div>
                     <h2 className={`text-lg font-semibold mb-1 ${task.isCompleted ? 'line-through text-gray-500' : ''}`}>
-                        {truncatedContent} {/* Apply truncation here */}
+                        {truncatedContent}
                     </h2>
-                    {task.description && <p className="text-gray-700 dark:text-zinc-400 text-sm mt-1">{truncatedDescription}</p>} {/* Apply truncation here */}
+                    {task.description && <p className="text-gray-700 dark:text-zinc-400 text-sm mt-1">{truncatedDescription}</p>}
                     <div className='flex flex-wrap gap-2 items-center mt-2'>
                         {/* Priority Dot */}
                         {task.priority !== undefined && task.priority !== null && (
@@ -95,18 +103,16 @@ const TaskCard = ({
                                 className={`w-2 h-2 rounded-full ${getPriorityDotColor(task.priority)}`}
                                 title={`Priority: ${typeof task.priority === 'string'
                                     ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1)
-                                    : task.priority // Display as is if not a string (e.g., number)
+                                    : task.priority
                                     }`}
                             ></div>
                         )}
                         {/* Tags */}
                         {task.tags && task.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 items-center">
-                                {/* Display only the first tag */}
                                 <span className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
                                     <Tag className='w-4 h-4' /> {task.tags[0]}
                                 </span>
-                                {/* If there are more tags, show the count */}
                                 {task.tags.length > 1 && (
                                     <span className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
                                         +{task.tags.length - 1} more
@@ -126,7 +132,7 @@ const TaskCard = ({
             </div>
 
             {/* Three dots menu container (only if any action props are provided) */}
-            {(onViewDetails || onEditTask || onConfirmDelete) && (
+            {(onViewDetails || onEditTask || onConfirmDelete) && ( // Re-added onViewDetails here
                 <div className="relative" ref={openDropdownId === task._id ? dropdownRef : null}>
                     <button
                         onClick={(e) => {
@@ -141,28 +147,37 @@ const TaskCard = ({
                     {/* Dropdown Menu */}
                     {openDropdownId === task._id && (
                         <div className="absolute right-0 mt-2 w-32 bg-white dark:text-white dark:bg-zinc-700 rounded-md shadow-lg z-30 py-1">
-                            {onViewDetails && (
+                            {onViewDetails && ( // Conditionally render "Details" option
                                 <button
-                                    onClick={() => {onViewDetails(task); setOpenDropdownId(null);}}
+                                    onClick={(e) => { e.stopPropagation(); onViewDetails(task); setOpenDropdownId(null); }}
                                     className="block w-full text-left px-4 py-2 text-sm dark:text-white dark:bg-zinc-700 text-gray-700 hover:bg-gray-100 dark:hover:bg-zinc-600"
                                 >
-                                    Details
+                                    <div className="flex items-center gap-2">
+                                        <ReceiptText className='w-4 h-4' />
+                                        Details
+                                    </div>
                                 </button>
                             )}
                             {onEditTask && (
                                 <button
-                                    onClick={() => onEditTask(task)}
+                                    onClick={(e) => { e.stopPropagation(); onEditTask(task); setOpenDropdownId(null); }}
                                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-white dark:bg-zinc-700 dark:hover:bg-zinc-600"
                                 >
-                                    Edit
+                                    <div className="flex items-center gap-2">
+                                        <Edit className='w-4 h-4' />
+                                        Edit
+                                    </div>
                                 </button>
                             )}
                             {onConfirmDelete && (
                                 <button
-                                    onClick={() => onConfirmDelete(task)}
+                                    onClick={(e) => { e.stopPropagation(); onConfirmDelete(task); setOpenDropdownId(null); }}
                                     className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-zinc-600"
                                 >
-                                    Delete
+                                    <div className="flex items-center gap-2">
+                                        <Trash2 className='w-4 h-4' />
+                                        Delete
+                                    </div>
                                 </button>
                             )}
                         </div>

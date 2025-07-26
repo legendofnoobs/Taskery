@@ -50,19 +50,35 @@ export async function createTask(req, res) {
     }
 }
 
-// Get all tasks for a project
+// Get all tasks for a project, with optional parentId filtering
 export async function getTasksByProject(req, res) {
     try {
         const { projectId } = req.params;
+        const { parentId } = req.query; // Get the parentId query parameter
 
-        const tasks = await Task.find({
+        // Start with base query for projectId and ownerId
+        let query = {
             projectId,
             ownerId: req.user._id,
-        }).sort({ order: 1, createdAt: -1 });
+        };
+
+        // Conditionally add parentId filter based on query parameter
+        if (parentId === 'null') {
+            // If parentId query parameter is 'null', filter for tasks with parentId: null
+            query.parentId = null;
+        } else if (parentId) {
+            // If parentId query parameter is provided and not 'null', filter by that specific parentId
+            query.parentId = parentId;
+        }
+        // If parentId query parameter is not provided at all, no parentId filter is added,
+        // meaning it will return all tasks (top-level and subtasks) for the project.
+
+        const tasks = await Task.find(query).sort({ order: 1, createdAt: -1 });
 
         res.status(200).json(tasks);
     } catch (error) {
-        res.status(500).json({ message: "Failed to get tasks", error });
+        console.error('Failed to get tasks for project:', error); // Log the actual error
+        res.status(500).json({ message: "Failed to get tasks", error: error.message }); // Send error message
     }
 }
 

@@ -4,11 +4,11 @@ import TaskCard from '../../components/common/TaskCard';
 import CreateTaskModal from '../../components/common/CreateTaskModal';
 import EditTaskModal from '../../components/common/EditTaskModal';
 import DeleteConfirmationModal from '../../components/common/DeleteConfirmationModal';
-import TaskDetailsPage from '../../components/common/TaskDetailsPage.jsx'; // Import the new TaskDetailsPage component
-// import TaskDetailsModal from '../../components/common/TaskDetailsModal'; // Remove or comment out if not needed
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useProjectTasks } from '../../hooks/useProjectTasks';
 import { useTaskSorting } from '../../hooks/useTaskSorting';
+import TaskDetailsPage from '../../components/common/TaskDetailsPage';
 
 /**
  * Page component to display tasks for a specific project.
@@ -17,8 +17,12 @@ import { useTaskSorting } from '../../hooks/useTaskSorting';
  * @param {function} props.onBackToProjects - Callback to navigate back to the projects list.
  */
 const ProjectTasksPage = ({ project, onBackToProjects }) => {
-    // State to hold the task selected for detailed view (page-level)
-    const [selectedTaskForDetails, setSelectedTaskForDetails] = useState(null);
+    const navigate = useNavigate(); // Initialize useNavigate
+    const location = useLocation(); // Initialize useLocation to read query params
+
+    // Extract taskId from URL if present
+    const queryParams = new URLSearchParams(location.search);
+    const taskIdFromUrl = queryParams.get('taskId');
 
     // Use the custom hook for project tasks data and API interactions
     const {
@@ -43,8 +47,6 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
     const [editingTask, setEditingTask] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
-    // const [viewingTask, setViewingTask] = useState(null); // No longer needed for page view
-    // const [showDetailsModal, setShowDetailsModal] = useState(false); // No longer needed for page view
 
     const today = new Date();
     const defaultTodayDate = today.toISOString().split('T')[0]; // Formats as "YYYY-MM-DD"
@@ -84,28 +86,24 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
             await handleDeleteTaskConfirmed(taskToDelete._id);
             setShowDeleteModal(false);
             setTaskToDelete(null);
-            // If the deleted task was the one being viewed, close the details page
-            if (selectedTaskForDetails && selectedTaskForDetails._id === taskToDelete._id) {
-                setSelectedTaskForDetails(null);
+            // If the deleted task was the one being viewed, navigate back from details page
+            if (taskIdFromUrl === taskToDelete._id) {
+                navigate(`/dashboard/projects?projectId=${project._id}`); // Navigate back to project tasks without taskId
             }
         }
     };
 
     /**
-     * Sets the task to be viewed in detail and switches to the TaskDetailsPage.
+     * Navigates to the TaskDetailsPage with the task ID in the URL.
      * @param {object} task - The task object to view details for.
      */
     const handleTaskCardClick = (task) => {
-        setSelectedTaskForDetails(task);
+        navigate(`/dashboard/projects?projectId=${project._id}&taskId=${task._id}`);
         setOpenDropdownId(null); // Close any open dropdown
     };
 
-    /**
-     * Callback to go back from TaskDetailsPage to the ProjectTasksPage list.
-     */
-    const handleBackToProjectTasks = () => {
-        setSelectedTaskForDetails(null);
-    };
+    // Find the selected task if taskId is present in the URL
+    const selectedTaskForDetails = taskIdFromUrl ? tasks.find(t => t._id === taskIdFromUrl) : null;
 
     if (!project) {
         return <div className="md:ml-72 mt-8 px-4 py-6 text-red-500">Project not found.</div>;
@@ -116,7 +114,17 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
         return (
             <TaskDetailsPage
                 task={selectedTaskForDetails}
-                onBackToInbox={handleBackToProjectTasks} // Renamed prop for clarity, but functionally the same
+                onBackToInbox={() => navigate(`/dashboard/projects?projectId=${project._id}`)} // Navigate back to project tasks
+                onTaskUpdated={(updatedTask) => {
+                    handleUpdateTask(updatedTask); // Update the task in the ProjectTasksPage state
+                    // Optionally, if the updated task's content is the current selectedTaskForDetails, update it
+                    // This is more complex if you deeply mutate, so consider refreshing tasks or a more robust state management
+                    // For now, assume handleUpdateTask re-fetches or updates locally
+                }}
+                onTaskDeleted={() => {
+                    handleDeleteTaskConfirmed(selectedTaskForDetails._id); // Delete the task
+                    navigate(`/dashboard/projects?projectId=${project._id}`); // Navigate back after deletion
+                }}
             />
         );
     }
@@ -249,16 +257,6 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                 title="Delete Task"
                 message={taskToDelete ? `Are you sure you want to delete the task "${taskToDelete.content}"? This action cannot be undone.` : "Are you sure you want to delete this task? This action cannot be undone."}
             />
-
-            {/* TaskDetailsModal is no longer used for page view, can be removed */}
-            {/* <TaskDetailsModal
-                isOpen={showDetailsModal}
-                onClose={() => {
-                    setShowDetailsModal(false);
-                    setViewingTask(null);
-                }}
-                task={viewingTask}
-            /> */}
         </div>
     );
 };
