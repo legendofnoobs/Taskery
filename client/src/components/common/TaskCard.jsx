@@ -26,8 +26,19 @@ const TaskCard = ({
     setOpenDropdownId,
     dropdownRef // Passed from parent to handle click outside
 }) => {
-    // Determine priority color based on numeric value
+    // Determine priority color based on numeric value for text color
     const getPriorityColor = (priority) => {
+        switch (priority) {
+            case 1: return 'text-blue-500'; // Low
+            case 2: return 'text-green-500'; // Medium
+            case 3: return 'text-yellow-500'; // High
+            case 4: return 'text-red-500'; // Urgent
+            default: return 'text-gray-400'; // Default/No priority
+        }
+    };
+
+    // Determine priority background color for the dot
+    const getPriorityDotColor = (priority) => {
         switch (priority) {
             case 1: return 'bg-blue-500'; // Low
             case 2: return 'bg-green-500'; // Medium
@@ -65,7 +76,7 @@ const TaskCard = ({
                 {onToggleComplete && (
                     <button
                         onClick={() => onToggleComplete(task)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className={`hover:opacity-80 transition-opacity ${getPriorityColor(task.priority)}`}
                         aria-label={task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
                     >
                         {task.isCompleted ? <CheckCircle /> : <Circle />}
@@ -81,7 +92,7 @@ const TaskCard = ({
                         {/* Priority Dot */}
                         {task.priority !== undefined && task.priority !== null && (
                             <div
-                                className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}
+                                className={`w-2 h-2 rounded-full ${getPriorityDotColor(task.priority)}`}
                                 title={`Priority: ${typeof task.priority === 'string'
                                     ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1)
                                     : task.priority // Display as is if not a string (e.g., number)
