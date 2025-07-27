@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useFavoriteProjects from '../../../hooks/useFavoriteProjects'; // Adjust path as needed

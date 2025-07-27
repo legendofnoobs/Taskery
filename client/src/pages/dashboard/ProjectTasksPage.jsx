@@ -74,8 +74,8 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
      */
     const confirmDelete = (task) => {
         setTaskToDelete(task);
-        setShowDeleteModal(true);
         setOpenDropdownId(null);
+        setShowDeleteModal(true);
     };
 
     /**
@@ -84,8 +84,8 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
     const onDeleteConfirmed = async () => {
         if (taskToDelete) {
             await handleDeleteTaskConfirmed(taskToDelete._id);
-            setShowDeleteModal(false);
             setTaskToDelete(null);
+            setShowDeleteModal(false);
             // If the deleted task was the one being viewed, navigate back from details page
             if (taskIdFromUrl === taskToDelete._id) {
                 navigate(`/dashboard/projects?projectId=${project._id}`); // Navigate back to project tasks without taskId

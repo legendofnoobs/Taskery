@@ -1,7 +1,3 @@
-import React from 'react'; // Import React
-import CreateTaskModal from '../common/CreateTaskModal'; // Import the CreateTaskModal
-
-// Import custom hooks
 import useSidebarToggle from '../../hooks/useSidebarToggle';
 
 // Import new components

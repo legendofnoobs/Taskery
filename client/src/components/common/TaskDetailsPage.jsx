@@ -23,7 +23,7 @@ const TaskDetailsPage = ({ task, onBackToInbox, onTaskUpdated, onTaskDeleted }) 
     const [isEditSubtaskModalOpen, setIsEditSubtaskModalOpen] = useState(false);
     const [editingSubtask, setEditingSubtask] = useState(null); // Stores the subtask being edited
 
-    const [isDeleteSubtaskModal, setIsDeleteSubtaskModal ]= useState(false);
+    const [isDeleteSubtaskModal, setIsDeleteSubtaskModal] = useState(false);
     const [deletingSubtask, setDeletingSubtask] = useState(null); // Stores the subtask being deleted
 
     const [openSubtaskDropdownId, setOpenSubtaskDropdownId] = useState(null);
@@ -242,18 +242,28 @@ const TaskDetailsPage = ({ task, onBackToInbox, onTaskUpdated, onTaskDeleted }) 
                     {/* Edit Task Button */}
                     <button
                         onClick={handleEditMainTask}
-                        className="flex items-center gap-2 font-bold px-2 py-2 lg:px-4 rounded-full disabled:opacity-50 gap-x-3 hover:bg-zinc-300 dark:hover:bg-zinc-100/10 transition-colors text-sm"
+                        className="flex items-center gap-2 font-bold px-2 py-2 lg:px-4 rounded-full disabled:opacity-50 hover:bg-zinc-300 dark:hover:bg-zinc-100/10 transition-colors text-sm"
                         aria-label="Edit Task"
                     >
-                        <Edit className="w-4 h-4" /> Edit
+                        <div className='flex items-center gap-2'>
+                            <Edit className="w-4 h-4" />
+                            <span className='hidden md:block'>
+                                Edit
+                            </span>
+                        </div>
                     </button>
                     {/* Delete Task Button */}
                     <button
                         onClick={handleConfirmDeleteMainTask}
-                        className="flex items-center gap-2 font-bold px-2 py-2 lg:px-4 rounded-full disabled:opacity-50 gap-x-3 bg-red-500 hover:bg-red-600 text-white transition-colors text-sm"
+                        className="flex items-center gap-2 font-bold px-2 py-2 lg:px-4 rounded-full disabled:opacity-50 bg-red-500 hover:bg-red-600 transition-colors text-sm"
                         aria-label="Delete Task"
                     >
-                        <Trash2 className="w-4 h-4" /> Delete
+                        <div className='flex items-center gap-2'>
+                            <Trash2 className="w-4 h-4" />
+                            <span className='hidden md:block'>
+                                Delete
+                            </span>
+                        </div>
                     </button>
                 </div>
             </div>

@@ -1,5 +1,4 @@
-import React from 'react';
-import { BadgePlus, Search, Inbox, FolderKanban, FileClock, Cog, Github } from 'lucide-react';
+import { Search, Inbox, FolderKanban, FileClock, Cog, Github } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 
 const SidebarNav = ({ closeSidebar,
@@ -18,16 +17,6 @@ const SidebarNav = ({ closeSidebar,
 
     return (
         <nav className="mt-12 md:mt-0 space-y-2 text-gray-700">
-            {/* Add Task Button - remains outside the active styling logic */}
-            {/* <button
-                className="flex items-center gap-x-3 w-full text-left px-3 py-2 rounded-full text-blue-600 hover:bg-blue-700 hover:text-white transition-colors font-semibold"
-                onClick={() => {
-                    setShowCreateModal(true);
-                    closeSidebar();
-                }}
-            >
-                <BadgePlus /> Add Task
-            </button> */}
             <div className='flex items-center gap-4'>
                 <img src="/Designer.webp" alt="logo" className='w-16' />
                 <h1 className='dark:text-white text-black font-bold text-4xl'>

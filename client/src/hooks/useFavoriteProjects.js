@@ -40,10 +40,8 @@ const useFavoriteProjects = () => {
         } finally {
             setProjectsLoading(false);
         }
-    }, []); // No external dependencies, as it relies on internal state/props that are stable or managed by other hooks
+    }, []);
 
-    // Effect to fetch favorite projects when the user changes (e.g., login/logout)
-    // or when the fetch function itself is re-created (which useCallback prevents)
     useEffect(() => {
         if (user) {
             fetchFavoriteProjects();
