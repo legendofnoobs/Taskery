@@ -4,12 +4,13 @@ import { BadgePlus, Inbox, ArrowLeft } from 'lucide-react';
 import CreateTaskModal from '../../components/common/CreateTaskModal';
 import EditTaskModal from '../../components/common/EditTaskModal';
 import DeleteConfirmationModal from '../../components/common/DeleteConfirmationModal';
-import TaskDetailsModal from '../../components/common/TaskDetailsModal'; // Keep this for now if you still want a modal option
 import TaskCard from '../../components/common/TaskCard';
 import { useInboxTasks } from '../../hooks/useInboxTasks';
 import { useTaskSorting } from '../../hooks/useTaskSorting.jsx';
 import toast from 'react-hot-toast';
 import TaskDetailsPage from '../../components/common/TaskDetailsPage.jsx'; // Import the new TaskDetailsPage component
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from 'framer-motion'; // Import motion and AnimatePresence
 
 const InboxPage = () => {
     // Use the custom hook for task data and API interactions
@@ -49,6 +50,19 @@ const InboxPage = () => {
     const today = new Date();
     const defaultTodayDate = today.toISOString().split('T')[0]; // Formats as "YYYY-MM-DD"
 
+    // Framer Motion variants for the task list container
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05, // Delay between each child item's animation
+                delayChildren: 0.1     // Initial delay before the first child starts animating
+            }
+        },
+        exit: { opacity: 0 } // Basic exit for the container if needed
+    };
+
     // Effect to handle clicks outside of any task dropdown menu
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -86,7 +100,14 @@ const InboxPage = () => {
 
     // Conditionally render TaskDetailsPage or the list of tasks
     if (selectedTaskForDetails) {
-        return <TaskDetailsPage task={selectedTaskForDetails} onBackToInbox={handleBackToInbox} />;
+        return (
+            <TaskDetailsPage
+                task={selectedTaskForDetails}
+                onBackToInbox={handleBackToInbox}
+                onTaskUpdated={handleUpdateTask} // Pass task update handler
+                onTaskDeleted={() => handleDeleteTaskConfirmed(selectedTaskForDetails._id)} // Pass task delete handler
+            />
+        );
     }
 
     // Separate tasks into incomplete and completed using the sorted tasks
@@ -132,67 +153,93 @@ const InboxPage = () => {
                 {loading ? (
                     <div className="text-gray-900 dark:text-white opacity-70">Loading tasks...</div>
                 ) : error ? (
-                <div className="text-red-500">{error}</div>
+                    <div className="text-red-500">{error}</div>
                 ) : (
-                <>
-                    {/* Incomplete Tasks Section */}
-                    {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-                        <div className="text-gray-900 dark:text-white opacity-50 italic">No tasks in inbox.</div> 
-                    ) : (
                     <>
-                        {incompleteTasks.length > 0 && (
-                            <ul className="space-y-4 mb-8">
-                                <h1 className="text-xl font-semibold dark:text-white mb-4 flex items-center gap-2">
-                                    {incompleteTasks.length} Tasks
-                                </h1>
-                                {incompleteTasks.map((task) => (
-                                    <TaskCard
-                                        key={task._id}
-                                        task={task}
-                                        onToggleComplete={toggleComplete}
-                                        onViewDetails={handleTaskCardClick} // <--- CHANGED: Use handleTaskCardClick for page view
-                                        onEditTask={(taskToEdit) => {
-                                            setEditingTask(taskToEdit);
-                                            setOpenDropdownId(null); // Close dropdown
-                                        }}
-                                        onConfirmDelete={confirmDelete}
-                                        openDropdownId={openDropdownId}
-                                        setOpenDropdownId={setOpenDropdownId}
-                                        dropdownRef={dropdownRef}
-                                    />
-                                ))}
-                            </ul>
-                        )}
+                        {/* Incomplete Tasks Section */}
+                        {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
+                            <div className="text-gray-900 dark:text-white opacity-50 italic">No tasks in inbox.</div>
+                        ) : (
+                            <>
+                                {incompleteTasks.length > 0 && (
+                                    <>
+                                        <h1 className="text-xl font-semibold dark:text-white mb-4 flex items-center gap-2">
+                                            {incompleteTasks.length} Tasks
+                                        </h1>
+                                        {/* Apply motion.ul and AnimatePresence here for incomplete tasks */}
+                                        <motion.ul
+                                            className="space-y-4 mb-8"
+                                            variants={containerVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            // Key changes to trigger animation when tasks data changes significantly
+                                            // Using a combination of selectedProjectId and tasks.length ensures animation
+                                            // plays when inbox loads or tasks count changes.
+                                            key={`inbox-incomplete-${selectedProjectId}-${tasks.length}`}
+                                        >
+                                            <AnimatePresence>
+                                                {incompleteTasks.map((task) => (
+                                                    <TaskCard
+                                                        key={task._id}
+                                                        task={task}
+                                                        onToggleComplete={toggleComplete}
+                                                        onViewDetails={handleTaskCardClick}
+                                                        onEditTask={(taskToEdit) => {
+                                                            setEditingTask(taskToEdit);
+                                                            setOpenDropdownId(null); // Close dropdown
+                                                        }}
+                                                        onConfirmDelete={confirmDelete}
+                                                        openDropdownId={openDropdownId}
+                                                        setOpenDropdownId={setOpenDropdownId}
+                                                        dropdownRef={dropdownRef}
+                                                        subtaskCount={task.subtaskCount || 0} // Pass subtaskCount
+                                                    />
+                                                ))}
+                                            </AnimatePresence>
+                                        </motion.ul>
+                                    </>
+                                )}
 
-                        {/* Completed Tasks Section */}
-                        {completedTasks.length > 0 && (
-                            <div className="mt-8">
-                                <h2 className="text-xl font-semibold dark:text-white mb-4 flex items-center gap-2">
-                                    You have Completed {completedTasks.length} Tasks!
-                                </h2>
-                                <ul className="space-y-4 opacity-60"> {/* Slightly dim completed tasks */}
-                                    {completedTasks.map((task) => (
-                                        <TaskCard
-                                            key={task._id}
-                                            task={task}
-                                            onToggleComplete={toggleComplete}
-                                            onViewDetails={handleTaskCardClick} // <--- CHANGED: Use handleTaskCardClick for page view
-                                            onEditTask={(taskToEdit) => {
-                                                setEditingTask(taskToEdit);
-                                                setOpenDropdownId(null);
-                                            }}
-                                            onConfirmDelete={confirmDelete}
-                                            openDropdownId={openDropdownId}
-                                            setOpenDropdownId={setOpenDropdownId}
-                                            dropdownRef={dropdownRef}
-                                        />
-                                    ))}
-                                </ul>
-                            </div>
+                                {/* Completed Tasks Section */}
+                                {completedTasks.length > 0 && (
+                                    <div className="mt-8">
+                                        <h2 className="text-xl font-semibold dark:text-white mb-4 flex items-center gap-2">
+                                            You have Completed {completedTasks.length} Tasks!
+                                        </h2>
+                                        {/* Apply motion.ul and AnimatePresence here for completed tasks */}
+                                        <motion.ul
+                                            className="space-y-4 opacity-60" // Slightly dim completed tasks
+                                            variants={containerVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            // Unique key for completed tasks list
+                                            key={`inbox-completed-${selectedProjectId}-${tasks.length}`}
+                                        >
+                                            <AnimatePresence>
+                                                {completedTasks.map((task) => (
+                                                    <TaskCard
+                                                        key={task._id}
+                                                        task={task}
+                                                        onToggleComplete={toggleComplete}
+                                                        onViewDetails={handleTaskCardClick}
+                                                        onEditTask={(taskToEdit) => {
+                                                            setEditingTask(taskToEdit);
+                                                            setOpenDropdownId(null);
+                                                        }}
+                                                        onConfirmDelete={confirmDelete}
+                                                        openDropdownId={openDropdownId}
+                                                        setOpenDropdownId={setOpenDropdownId}
+                                                        dropdownRef={dropdownRef}
+                                                        subtaskCount={task.subtaskCount || 0} // Pass subtaskCount
+                                                    />
+                                                ))}
+                                            </AnimatePresence>
+                                        </motion.ul>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </>
-                        )}
-                </>
                 )}
             </div>
 
@@ -222,20 +269,6 @@ const InboxPage = () => {
                 title="Delete Task"
                 message={taskToDelete ? `Are you sure you want to delete the task "${taskToDelete.content}"? This action cannot be undone.` : "Are you sure you want to delete this task? This action cannot be undone."}
             />
-
-            {/* TaskDetailsModal is still here, but can be removed if you exclusively use TaskDetailsPage */}
-            {/* If you want *both* a modal and a page, you'd need to rename this component or make its usage clearer */}
-            {/* For now, I'll comment it out to focus on the page pattern */}
-            {/*
-            <TaskDetailsModal
-                isOpen={showDetailsModal}
-                onClose={() => {
-                    setShowDetailsModal(false);
-                    setViewingTask(null);
-                }}
-                task={viewingTask}
-            />
-            */}
         </div>
     );
 };

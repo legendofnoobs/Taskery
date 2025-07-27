@@ -1,5 +1,7 @@
 import React from 'react';
-import { CheckCircle, Circle, Edit, MoreVertical, ReceiptText, Tag, Trash2 } from 'lucide-react';
+import { CheckCircle, Circle, Edit, MoreVertical, ReceiptText, Tag, Trash2, ListTree } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion'; // Make sure this is 'framer-motion' not 'motion/react'
 
 /**
  * Reusable component to display a single task or subtask in a list.
@@ -17,19 +19,43 @@ import { CheckCircle, Circle, Edit, MoreVertical, ReceiptText, Tag, Trash2 } fro
  * @param {function} props.setOpenDropdownId - Function to set the ID of the currently open dropdown.
  * @param {React.RefObject} props.dropdownRef - Ref object to detect clicks outside the dropdown.
  * @param {boolean} [props.isSubtask=false] - If true, applies specific styling for subtasks.
+ * @param {number} [props.subtaskCount=0] - The number of subtasks associated with this task (passed from parent).
  */
 const TaskCard = ({
     task,
     onToggleComplete,
-    onViewDetails, // Re-added onViewDetails prop
+    onViewDetails,
     onEditTask,
     onConfirmDelete,
     onClick,
     openDropdownId,
     setOpenDropdownId,
     dropdownRef,
-    isSubtask = false
+    isSubtask = false,
+    subtaskCount = 0
 }) => {
+    // Define the variants for the individual task card
+    // These will be controlled by the parent's `staggerChildren`
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: "spring", // Use a spring animation for a bouncier feel
+                stiffness: 200, // Stiffness of the spring
+                damping: 20   // Damping to reduce oscillation
+            }
+        },
+        exit: {
+            opacity: 0,
+            x: -20, // Animate out to the left
+            transition: {
+                duration: 0.2
+            }
+        }
+    };
+
     // Determine priority color based on numeric value for text color
     const getPriorityColor = (priority) => {
         switch (priority) {
@@ -71,10 +97,14 @@ const TaskCard = ({
     const truncatedDescription = truncateWords(task.description, 25);
 
     return (
-        <li
+        <motion.li // Use motion.li for animation
             key={task._id}
             className={`p-4 rounded-xl shadow-sm flex flex-row md:items-center dark:bg-zinc-800 justify-between gap-2 bg-white dark:text-white hover:shadow-[0px_0px_20px_5px_rgb(66,135,245,0.1)] transition-shadow ${isSubtask ? 'border-l-2 border-gray-300 dark:border-zinc-600 pl-4' : ''}`}
             onClick={onClick ? () => onClick(task) : undefined}
+
+            // Framer Motion props using variants
+            variants={cardVariants}
+            layout // Keep layout for smooth position changes
         >
             <div className="flex items-start gap-4">
                 {/* Toggle Complete Button (only if onToggleComplete prop is provided) */}
@@ -110,12 +140,12 @@ const TaskCard = ({
                         {/* Tags */}
                         {task.tags && task.tags.length > 0 && (
                             <div className="flex flex-wrap gap-2 items-center">
-                                <span className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
+                                <span className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
                                     <Tag className='w-4 h-4' /> {task.tags[0]}
                                 </span>
                                 {task.tags.length > 1 && (
-                                    <span className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
-                                        +{task.tags.length - 1} more
+                                    <span className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
+                                        +{task.tags.length - 1}
                                     </span>
                                 )}
                             </div>
@@ -123,8 +153,15 @@ const TaskCard = ({
 
                         {/* Due Date */}
                         {task.dueDate && (
-                            <div className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
+                            <div className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
                                 {`Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+                            </div>
+                        )}
+
+                        {/* Subtasks Count */}
+                        {subtaskCount > 0 && (
+                            <div className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
+                                <ListTree className='w-4 h-4' /> {subtaskCount} Subtask{subtaskCount > 1 ? 's' : ''}
                             </div>
                         )}
                     </div>
@@ -132,7 +169,7 @@ const TaskCard = ({
             </div>
 
             {/* Three dots menu container (only if any action props are provided) */}
-            {(onViewDetails || onEditTask || onConfirmDelete) && ( // Re-added onViewDetails here
+            {(onViewDetails || onEditTask || onConfirmDelete) && (
                 <div className="relative" ref={openDropdownId === task._id ? dropdownRef : null}>
                     <button
                         onClick={(e) => {
@@ -184,7 +221,7 @@ const TaskCard = ({
                     )}
                 </div>
             )}
-        </li>
+        </motion.li>
     );
 };
 

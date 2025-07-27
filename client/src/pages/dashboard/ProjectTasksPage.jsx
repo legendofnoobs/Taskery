@@ -5,6 +5,8 @@ import CreateTaskModal from '../../components/common/CreateTaskModal';
 import EditTaskModal from '../../components/common/EditTaskModal';
 import DeleteConfirmationModal from '../../components/common/DeleteConfirmationModal';
 import { useNavigate, useLocation } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from 'framer-motion'; // Import motion and AnimatePresence
 
 import { useProjectTasks } from '../../hooks/useProjectTasks';
 import { useTaskSorting } from '../../hooks/useTaskSorting';
@@ -54,6 +56,19 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
     // State for managing which task's dropdown is open
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const dropdownRef = useRef(null); // Ref to detect clicks outside the dropdown
+
+    // Framer Motion variants for the task list container
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05, // Delay between each child item's animation
+                delayChildren: 0.1     // Initial delay before the first child starts animating
+            }
+        },
+        exit: { opacity: 0 } // Basic exit for the container if needed
+    };
 
     // Effect to handle clicks outside of any task dropdown menu
     useEffect(() => {
@@ -167,67 +182,94 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                 {loading ? (
                     <div className="text-gray-900 dark:text-white opacity-70">Loading tasks...</div>
                 ) : error ? (
-                <div className="text-red-500">{error}</div>
+                    <div className="text-red-500">{error}</div>
                 ) : (
-                <>
-                    {/* Incomplete Tasks Section */}
-                    {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-                        <div className="text-gray-900 dark:text-white opacity-50 italic">No tasks in this project.</div>
-                    ) : (
                     <>
-                        {incompleteTasks.length > 0 && (
-                            <ul className="space-y-4 mb-8">
-                                <h1 className='text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2'> {/* Applied static colors */}
-                                    {incompleteTasks.length} Tasks
-                                </h1>
-                                {incompleteTasks.map((task) => (
-                                    <TaskCard
-                                        key={task._id}
-                                        task={task}
-                                        onToggleComplete={toggleComplete}
-                                        onViewDetails={handleTaskCardClick} // Use the new handler for page view
-                                        onEditTask={(taskToEdit) => {
-                                            setEditingTask(taskToEdit);
-                                            setOpenDropdownId(null);
-                                        }}
-                                        onConfirmDelete={confirmDelete}
-                                        openDropdownId={openDropdownId}
-                                        setOpenDropdownId={setOpenDropdownId}
-                                        dropdownRef={dropdownRef}
-                                    />
-                                ))}
-                            </ul>
-                        )}
+                        {/* Incomplete Tasks Section */}
+                        {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
+                            <div className="text-gray-900 dark:text-white opacity-50 italic">No tasks in this project.</div>
+                        ) : (
+                            <>
+                                {incompleteTasks.length > 0 && (
+                                    <>
+                                        <h1 className='text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2'> {/* Applied static colors */}
+                                            {incompleteTasks.length} Tasks
+                                        </h1>
+                                        {/* Apply motion.ul and AnimatePresence here for incomplete tasks */}
+                                        <motion.ul
+                                            className="space-y-4 mb-8"
+                                            variants={containerVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            // The key below will force re-animation when tasks are initially loaded for this project
+                                            // or if the project ID itself changes (e.g., navigating to a different project).
+                                            // Using tasks.length can also trigger, but might re-animate on every add/delete,
+                                            // which might be desired or undesired depending on UX. project._id is stable for a project context.
+                                            key={project._id + '-incomplete-tasks'}
+                                        >
+                                            <AnimatePresence>
+                                                {incompleteTasks.map((task) => (
+                                                    <TaskCard
+                                                        key={task._id}
+                                                        task={task}
+                                                        onToggleComplete={toggleComplete}
+                                                        onViewDetails={handleTaskCardClick}
+                                                        onEditTask={(taskToEdit) => {
+                                                            setEditingTask(taskToEdit);
+                                                            setOpenDropdownId(null);
+                                                        }}
+                                                        onConfirmDelete={confirmDelete}
+                                                        openDropdownId={openDropdownId}
+                                                        setOpenDropdownId={setOpenDropdownId}
+                                                        dropdownRef={dropdownRef}
+                                                        subtaskCount={task.subtaskCount || 0} // Ensure subtaskCount is passed if available
+                                                    />
+                                                ))}
+                                            </AnimatePresence>
+                                        </motion.ul>
+                                    </>
+                                )}
 
-                        {/* Completed Tasks Section */}
-                        {completedTasks.length > 0 && (
-                            <div className="mt-8">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"> {/* Applied static colors */}
-                                    You have Completed {completedTasks.length} Tasks!
-                                </h2>
-                                <ul className="space-y-4 opacity-70"> {/* Slightly dim completed tasks */}
-                                    {completedTasks.map((task) => (
-                                        <TaskCard
-                                            key={task._id}
-                                            task={task}
-                                            onToggleComplete={toggleComplete}
-                                            onViewDetails={handleTaskCardClick} // Use the new handler for page view
-                                            onEditTask={(taskToEdit) => {
-                                                setEditingTask(taskToEdit);
-                                                setOpenDropdownId(null);
-                                            }}
-                                            onConfirmDelete={confirmDelete}
-                                            openDropdownId={openDropdownId}
-                                            setOpenDropdownId={setOpenDropdownId}
-                                            dropdownRef={dropdownRef}
-                                        />
-                                    ))}
-                                </ul>
-                            </div>
+                                {/* Completed Tasks Section */}
+                                {completedTasks.length > 0 && (
+                                    <div className="mt-8">
+                                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"> {/* Applied static colors */}
+                                            You have Completed {completedTasks.length} Tasks!
+                                        </h2>
+                                        {/* Apply motion.ul and AnimatePresence here for completed tasks */}
+                                        <motion.ul
+                                            className="space-y-4 opacity-70" // Slightly dim completed tasks
+                                            variants={containerVariants}
+                                            initial="hidden"
+                                            animate="visible"
+                                            // Unique key for completed tasks list
+                                            key={project._id + '-completed-tasks'}
+                                        >
+                                            <AnimatePresence>
+                                                {completedTasks.map((task) => (
+                                                    <TaskCard
+                                                        key={task._id}
+                                                        task={task}
+                                                        onToggleComplete={toggleComplete}
+                                                        onViewDetails={handleTaskCardClick}
+                                                        onEditTask={(taskToEdit) => {
+                                                            setEditingTask(taskToEdit);
+                                                            setOpenDropdownId(null);
+                                                        }}
+                                                        onConfirmDelete={confirmDelete}
+                                                        openDropdownId={openDropdownId}
+                                                        setOpenDropdownId={setOpenDropdownId}
+                                                        dropdownRef={dropdownRef}
+                                                        subtaskCount={task.subtaskCount || 0} // Ensure subtaskCount is passed if available
+                                                    />
+                                                ))}
+                                            </AnimatePresence>
+                                        </motion.ul>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </>
-                        )}
-                </>
                 )}
             </div>
 
