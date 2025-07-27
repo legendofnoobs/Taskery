@@ -151,17 +151,17 @@ const TaskCard = ({
                             </div>
                         )}
 
-                        {/* Due Date */}
-                        {task.dueDate && (
-                            <div className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
-                                {`Due: ${new Date(task.dueDate).toLocaleDateString()}`}
-                            </div>
-                        )}
-
                         {/* Subtasks Count */}
                         {subtaskCount > 0 && (
                             <div className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
                                 <ListTree className='w-4 h-4' /> {subtaskCount} Subtask{subtaskCount > 1 ? 's' : ''}
+                            </div>
+                        )}
+
+                        {/* Due Date */}
+                        {task.dueDate && (
+                            <div className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
+                                {`Due: ${new Date(task.dueDate).toLocaleDateString()}`}
                             </div>
                         )}
                     </div>
