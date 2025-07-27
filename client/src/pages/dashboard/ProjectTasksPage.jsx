@@ -201,10 +201,6 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                                             variants={containerVariants}
                                             initial="hidden"
                                             animate="visible"
-                                            // The key below will force re-animation when tasks are initially loaded for this project
-                                            // or if the project ID itself changes (e.g., navigating to a different project).
-                                            // Using tasks.length can also trigger, but might re-animate on every add/delete,
-                                            // which might be desired or undesired depending on UX. project._id is stable for a project context.
                                             key={project._id + '-incomplete-tasks'}
                                         >
                                             <AnimatePresence>

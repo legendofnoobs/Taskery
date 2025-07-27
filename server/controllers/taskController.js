@@ -1,5 +1,6 @@
 import Task from "../models/Task.js";
 import ActivityLog from "../models/ActivityLog.js";
+import mongoose from 'mongoose'; // Import mongoose to use ObjectId for comparisons
 
 // Helper to log activity
 async function logActivity({ userId, action, entityType = "task", targetId }) {
@@ -51,29 +52,34 @@ export async function createTask(req, res) {
 }
 
 // Get all tasks for a project, with optional parentId filtering
+// MODIFIED: Now includes subtaskCount for top-level tasks
 export async function getTasksByProject(req, res) {
     try {
         const { projectId } = req.params;
         const { parentId } = req.query; // Get the parentId query parameter
 
-        // Start with base query for projectId and ownerId
         let query = {
-            projectId,
+            projectId: new mongoose.Types.ObjectId(projectId), // Ensure projectId is an ObjectId
             ownerId: req.user._id,
         };
 
-        // Conditionally add parentId filter based on query parameter
-        if (parentId === 'null') {
-            // If parentId query parameter is 'null', filter for tasks with parentId: null
-            query.parentId = null;
+        if (parentId === 'null' || parentId === undefined) {
+            query.parentId = null; // Filter for top-level tasks
         } else if (parentId) {
-            // If parentId query parameter is provided and not 'null', filter by that specific parentId
-            query.parentId = parentId;
+            query.parentId = new mongoose.Types.ObjectId(parentId); // Filter by specific parentId
         }
-        // If parentId query parameter is not provided at all, no parentId filter is added,
-        // meaning it will return all tasks (top-level and subtasks) for the project.
 
-        const tasks = await Task.find(query).sort({ order: 1, createdAt: -1 });
+        let tasks = await Task.find(query).sort({ order: 1, createdAt: -1 }).lean();
+
+        if (parentId === 'null' || parentId === undefined) {
+            tasks = await Promise.all(tasks.map(async (task) => {
+                const subtaskCount = await Task.countDocuments({
+                    parentId: task._id,
+                    ownerId: req.user._id // Ensure we only count subtasks owned by the user
+                });
+                return { ...task, subtaskCount }; // Add subtaskCount to the task object
+            }));
+        }
 
         res.status(200).json(tasks);
     } catch (error) {
@@ -210,7 +216,7 @@ export async function getSubtasks(req, res) {
         const { parentId } = req.params;
 
         const subtasks = await Task.find({
-            parentId,
+            parentId: new mongoose.Types.ObjectId(parentId), // Ensure parentId is an ObjectId
             ownerId: req.user._id,
         }).sort({ order: 1, createdAt: -1 });
 
@@ -225,7 +231,7 @@ export async function getSubtaskCompletionPercentage(req, res) {
         const { parentId } = req.params;
 
         const subtasks = await Task.find({
-            parentId,
+            parentId: new mongoose.Types.ObjectId(parentId), // Ensure parentId is an ObjectId
             ownerId: req.user._id,
         });
 
