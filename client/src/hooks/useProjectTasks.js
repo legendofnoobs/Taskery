@@ -41,9 +41,6 @@ export const useProjectTasks = (project) => {
             }
 
             console.log(`useProjectTasks: Fetching top-level tasks for project ID: ${project._id}`);
-            // MODIFICATION HERE: Add a query parameter or use a specific endpoint
-            // This assumes your backend has an endpoint like /api/tasks/project/:projectId?parentId=null
-            // Or you might need a dedicated endpoint like /api/tasks/project/:projectId/top-level
             const res = await axios.get(`${API_URL}/tasks/project/${project._id}?parentId=null`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -67,7 +64,9 @@ export const useProjectTasks = (project) => {
 
     /**
      * Handles the creation of a new task for the current project.
-     * Includes optimistic update.
+     * This operation *does* benefit from a full re-fetch because a new task
+     * receives a server-generated ID and might affect parent subtask counts.
+     * However, we can still provide optimistic feedback first.
      * @param {object} taskData - The data for the new task.
      */
     const handleCreateTask = async (taskData) => {
@@ -75,29 +74,52 @@ export const useProjectTasks = (project) => {
             toast.error('Project or authentication not ready. Cannot create task.');
             return false;
         }
-        try {
-            const res = await axios.post(`${API_URL}/tasks`, {
-                ...taskData,
-                projectId: project._id, // Assign to the current project
-            }, {
+
+        const tempId = `temp-${Date.now()}`; // Assign a temporary ID for optimistic rendering
+        // Create an optimistic version of the new task, including fields expected from server
+        const optimisticTask = {
+            _id: tempId,
+            projectId: project._id,
+            isCompleted: false, // Default completion status
+            createdAt: new Date().toISOString(), // Client-side timestamp
+            updatedAt: new Date().toISOString(), // Client-side timestamp
+            subtaskCount: 0, // Assume 0 subtasks initially
+            ...taskData,
+        };
+
+        // Optimistically add the new task to the UI
+        setTasks(prevTasks => [optimisticTask, ...prevTasks]);
+        toast.promise(
+            axios.post(`${API_URL}/tasks`, { ...taskData, projectId: project._id }, {
                 headers: { Authorization: `Bearer ${token}` }
-            });
-            // Optimistically add the new task to the TOP of the state
-            setTasks(prevTasks => [res.data, ...prevTasks]); // <-- CHANGED HERE
-            toast.success('Added Task!');
-            // Removed fetchProjectTasks() here to enable seamless optimistic update
-            return true;
-        } catch (err) {
-            console.error('Failed to create task:', err);
-            toast.error(err.response?.data?.message || 'Failed to create task.');
-            fetchProjectTasks(); // Fallback re-fetch on error
-            return false;
-        }
+            })
+                .then(res => {
+                    // Replace the optimistic task with the real one from the server
+                    setTasks(prevTasks => prevTasks.map(t => t._id === tempId ? res.data : t));
+                    // After successful creation, a re-fetch is still the safest bet
+                    // to ensure all related counts (e.g., parent's subtaskCount) are accurate.
+                    // fetchProjectTasks();
+                    return 'Task added!';
+                }),
+            {
+                loading: 'Adding task...',
+                success: (message) => message,
+                error: (err) => {
+                    console.error('Failed to create task:', err);
+                    // On error, revert the optimistic addition
+                    setTasks(prevTasks => prevTasks.filter(t => t._id !== tempId));
+                    // fetchProjectTasks(); // Fallback re-fetch to ensure consistency
+                    return err.response?.data?.message || 'Failed to create task.';
+                },
+            }
+        );
+        return true; // Return true as optimistic update is in progress
     };
 
     /**
      * Toggles the completion status of a task.
-     * Includes optimistic update and server sync.
+     * This operation often affects derived properties like "completed subtask count"
+     * on parent tasks, thus a re-fetch is justified after the optimistic update.
      * @param {object} task - The task object to toggle.
      */
     const toggleComplete = async (task) => {
@@ -106,30 +128,26 @@ export const useProjectTasks = (project) => {
             return;
         }
 
-        console.log("toggleComplete (ProjectTasks): Task object received:", task);
         const originalIsCompleted = task.isCompleted;
         const nextIsCompleted = !originalIsCompleted;
-        console.log(`toggleComplete (ProjectTasks): Original: ${originalIsCompleted}, New: ${nextIsCompleted}`);
 
-        // Optimistic update
+        // Optimistic update for immediate visual feedback
         setTasks(prev =>
             prev.map(t => (t._id === task._id ? { ...t, isCompleted: nextIsCompleted } : t))
         );
 
         try {
             const endpoint = nextIsCompleted ? 'complete' : 'uncomplete';
-            console.log(`toggleComplete (ProjectTasks): Sending PATCH to ${API_URL}/tasks/${task._id}/${endpoint}`);
             const { data } = await axios.patch(
                 `${API_URL}/tasks/${task._id}/${endpoint}`,
                 {}, // Empty body for PATCH /complete or /uncomplete
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            // Sync with server response just in case backend modified anything else
-            setTasks(prev =>
-                prev.map(t => (t._id === task._id ? data : t))
-            );
-
+            // A re-fetch is still recommended here because toggling completion
+            // of a subtask might change the completion status of its parent task,
+            // or modify 'completedSubtaskCount' which is a derived property.
+            // await fetchProjectTasks();
             toast.success(`Task marked as ${data.isCompleted ? 'completed' : 'incomplete'}!`);
         } catch (err) {
             console.error('useProjectTasks: Failed to toggle task completion:', err);
@@ -152,8 +170,9 @@ export const useProjectTasks = (project) => {
     function diffTask(original, next) {
         const payload = {};
         for (const key of Object.keys(next)) {
-            // Skip _id and any other keys that should not be updated via PUT
-            if (key === '_id' || key === 'projectId' || key === 'ownerId' || key === '__v' || key === 'createdAt' || key === 'updatedAt') continue;
+            // Skip _id and any other keys that should not be updated via PUT/PATCH,
+            // including 'subtaskCount' as it's a derived property.
+            if (key === '_id' || key === 'projectId' || key === 'ownerId' || key === '__v' || key === 'createdAt' || key === 'updatedAt' || key === 'subtaskCount') continue;
             // Compare values, ensuring date objects are compared by their string representation
             if (original[key] instanceof Date && next[key] instanceof Date) {
                 if (original[key].toISOString() !== next[key].toISOString()) {
@@ -168,7 +187,9 @@ export const useProjectTasks = (project) => {
 
     /**
      * Handles the update of an existing task.
-     * Includes optimistic update and server sync.
+     * This method prioritizes maintaining UI fluidity for edits that *don't*
+     * change the list's structure or fundamentally alter derived properties
+     * like subtask counts that are tied to relationships.
      * @param {object} updatedTaskFromModal - The updated task object from the modal.
      */
     const handleUpdateTask = async (updatedTaskFromModal) => {
@@ -178,69 +199,65 @@ export const useProjectTasks = (project) => {
             return false;
         }
 
-        console.log("handleUpdateTask (ProjectTasks): Incoming updatedTask from modal:", updatedTaskFromModal);
-
-        // 1) Find the current task in state to get its original `isCompleted` status
         const currentTaskInState = tasks.find(t => t._id === updatedTaskFromModal._id);
         if (!currentTaskInState) {
             toast.error('Task not found in UI state.');
             return false;
         }
 
-        // 2) Build the payload (send only what changed)
         const payloadToSend = diffTask(currentTaskInState, updatedTaskFromModal);
 
-        // Ensure `isCompleted` is always explicitly included in the payloadToSend
-        // If the modal didn't send it, preserve the current state's value.
-        // If the modal did send it, use the modal's value.
+        // Ensure isCompleted is always included in payload if it changed or not
+        // as it might be explicitly set in the modal
         if (payloadToSend.isCompleted === undefined) {
             payloadToSend.isCompleted = currentTaskInState.isCompleted;
         }
 
-        // If nothing changed (after considering `isCompleted` explicitly), just close modal
         if (Object.keys(payloadToSend).length === 0) {
             toast('Nothing to update.');
             return true;
         }
 
-        // 3) Optimistic update
+        // Optimistic update: Merge the updated fields but crucially *keep*
+        // subtaskCount from currentTaskInState, as the backend PUT might not return it.
         const originalTasks = tasks; // Store for rollback
-        const optimisticTask = { ...currentTaskInState, ...payloadToSend }; // Merge current state with changes
+        const optimisticTask = {
+            ...currentTaskInState, // Start with the current state (includes subtaskCount)
+            ...payloadToSend,      // Apply only the explicitly changed fields
+        };
 
         setTasks(prev =>
             prev.map(t => (t._id === currentTaskInState._id ? optimisticTask : t))
         );
 
         try {
-            // 4) Call API with the carefully constructed payload
-            console.log("handleUpdateTask (ProjectTasks): Sending payload to backend (PUT /tasks/:id):", payloadToSend);
-            const { data: savedTask } = await axios.put(
+            // Make the API call with only the changed fields
+            await axios.put(
                 `${API_URL}/tasks/${currentTaskInState._id}`,
-                payloadToSend, // Send only the changed fields, including explicit isCompleted
+                payloadToSend,
                 { headers: { Authorization: `Bearer ${currentToken}` } }
             );
 
-            // 5) Sync with server response (just in case backend modified anything)
-            setTasks(prev =>
-                prev.map(t => (t._id === currentTaskInState._id ? savedTask : t))
-            );
-
+            // Crucial: We DO NOT fetchProjectTasks here for typical edits (content, due date, priority).
+            // The optimistic update handles the UI transition smoothly.
+            // If the backend PUT *does* return an updated subtaskCount, you could merge it here,
+            // but generally, simple edits don't affect subtask counts.
             toast.success('Task updated!');
-            // Removed fetchProjectTasks() here to enable seamless optimistic update
             return true;
         } catch (err) {
             console.error('useProjectTasks: Failed to update task:', err);
             toast.error(err.response?.data?.message || 'Failed to update task.');
             // Rollback optimistic update on failure
             setTasks(originalTasks);
-            fetchProjectTasks(); // Fallback hard refresh
+            fetchProjectTasks(); // Fallback hard refresh to ensure consistency
             return false;
         }
     };
 
     /**
      * Executes the task deletion after confirmation.
-     * Includes optimistic update.
+     * This operation inherently changes the list structure and might affect
+     * parent subtask counts, making a re-fetch beneficial.
      * @param {string} taskId - The ID of the task to delete.
      */
     const handleDeleteTaskConfirmed = async (taskId) => {
@@ -249,8 +266,8 @@ export const useProjectTasks = (project) => {
             return false;
         }
 
-        // Optimistic update (store original for rollback)
-        const originalTasks = tasks;
+        // Optimistic update: Remove the task immediately from the UI
+        const originalTasks = tasks; // Store for rollback
         setTasks(prevTasks => prevTasks.filter(t => t._id !== taskId));
 
         try {
@@ -258,9 +275,8 @@ export const useProjectTasks = (project) => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Task deleted!");
-            // No need to re-fetch if optimistic update was successful and accurate
-            // unless project task counts are displayed elsewhere and need updating.
-            // For now, we rely on the filter to update the list.
+            // After deletion, re-fetch to ensure any potential parent tasks' subtask counts are updated
+            // await fetchProjectTasks(); // Re-fetch for full accuracy and derived properties
             return true;
         } catch (err) {
             console.error('useProjectTasks: Failed to delete task:', err);
