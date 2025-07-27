@@ -1,9 +1,10 @@
 /* eslint-disable no-unused-vars */
 // src/pages/dashboard/DashboardLayout.jsx
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from '../../components/common/Sidebar'
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import useAuth from '../../context/useAuth'
+import { use } from 'react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -11,41 +12,14 @@ const DashboardLayout = () => {
     const [projects, setProjects] = useState([])
     const [selectedProjectId, setSelectedProjectId] = useState('')
     const [error, setError] = useState(null)
+    const {user} = useAuth()
+    const navigate = useNavigate()
+
     useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const token = localStorage.getItem('token')
-                const res = await axios.get(`${API_URL}/projects`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                })
-
-                const userProjects = res.data || []
-
-                setProjects(userProjects)
-
-                if (userProjects.length > 0) {
-                    setSelectedProjectId(userProjects[0]._id)
-                } else {
-                    // fallback to inbox project
-                    const inboxRes = await axios.get(`${API_URL}/projects/inbox`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    })
-
-                    if (inboxRes.data?._id) {
-                        setSelectedProjectId(inboxRes.data._id)
-                        setProjects([inboxRes.data])
-                    }
-                }
-            } catch (err) {
-                console.error('Failed to load projects:', err)
-                setError('Failed to load projects')
-            }
+        if (!user) {
+            navigate('/login')
         }
-    }, [])
+    }, [user, navigate])
 
     return (
         <div className="flex min-h-screen bg-gray-200 dark:bg-zinc-900 w-full">

@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/useAuth';
-import useFavoriteProjects from './useFavoriteProjects';
+// import useFavoriteProjects from './useFavoriteProjects';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -17,7 +17,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
  */
 export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => {
     const { user } = useAuth();
-    const { refetchProjects: refetchSidebarFavorites } = useFavoriteProjects();
+    // const { refetchProjects: refetchSidebarFavorites } = useFavoriteProjects();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -193,7 +193,7 @@ export const useInboxTasks = (filterDueDate = 'all', filterPriority = 'all') => 
                     // Replace the optimistic task with the real one from the server
                     // This ensures we get the actual _id and server-generated timestamps/defaults
                     setTasks(prevTasks => prevTasks.map(t => (t._id === tempId ? res.data : t)));
-                    refetchSidebarFavorites(); // Potentially update sidebar counts if projects are affected
+                    // refetchSidebarFavorites(); // Potentially update sidebar counts if projects are affected
                     // A full re-fetch is still often best for creation to ensure all derived properties
                     // are accurate and filters are correctly applied to the new task.
                     // fetchTasksForInbox();

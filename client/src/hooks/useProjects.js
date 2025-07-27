@@ -4,7 +4,6 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth'; // Assuming useAuth is in ../context/useAuth
-import useFavoriteProjects from './useFavoriteProjects'; // Import the useFavoriteProjects hook
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -23,9 +22,6 @@ export const useProjects = () => {
     const token = localStorage.getItem('token'); // Get token directly here as it's used in API calls
     const location = useLocation();
     const navigate = useNavigate();
-
-    // Get the refetch function from useFavoriteProjects to update the sidebar
-    const { refetchProjects: refetchSidebarFavorites } = useFavoriteProjects();
 
     // Memoized function to fetch all projects (excluding inbox if not explicitly requested)
     const fetchAllProjects = useCallback(async () => {
@@ -89,7 +85,7 @@ export const useProjects = () => {
             });
             toast.success("Created Project!");
             fetchAllProjects(); // Re-fetch all projects to update the main list
-            refetchSidebarFavorites(); // Update sidebar's favorite projects
+
             return true;
         } catch (err) {
             console.error('Failed to create project:', err);
@@ -105,7 +101,7 @@ export const useProjects = () => {
             });
             toast.success("Updated Project!");
             fetchAllProjects(); // Re-fetch all projects to update the main list
-            refetchSidebarFavorites(); // Update sidebar's favorite projects
+
             return true;
         } catch (err) {
             console.error('Failed to update project:', err);
@@ -121,7 +117,6 @@ export const useProjects = () => {
             });
             toast.success("Deleted Project!");
             fetchAllProjects(); // Re-fetch all projects to update the main list
-            refetchSidebarFavorites(); // Update sidebar's favorite projects
             return true;
         } catch (err) {
             console.error('Failed to delete project:', err);
@@ -144,7 +139,6 @@ export const useProjects = () => {
             if (res.data.isFavorite) toast.success("Project Favored!");
             else toast.error("Project Unfavored!");
 
-            refetchSidebarFavorites(); // <--- THIS IS THE KEY: Call to update sidebar favorites immediately
         } catch (err) {
             console.error(`Failed to ${project.isFavorite ? 'unfavorite' : 'favorite'} project`, err);
             toast.error(err.response?.data?.message || `Failed to ${project.isFavorite ? 'unfavorite' : 'favorite'} project`);

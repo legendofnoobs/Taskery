@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const { login, error } = useAuth();
+    const { login, error, user } = useAuth();
     const navigate = useNavigate();
     const [form, setForm] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false); // Add loading state for button
@@ -11,6 +11,13 @@ const Login = () => {
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
+
+    useEffect(() => {
+        if (user) {
+            navigate('/dashboard/inbox');
+        }
+    }, [user, navigate]);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
