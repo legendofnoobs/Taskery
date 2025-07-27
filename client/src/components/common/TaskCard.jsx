@@ -140,7 +140,7 @@ const TaskCard = ({
 
                         {/* Subtasks Count */}
                         {subtaskCount > 0 && (
-                            <div className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
+                            <div className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
                                 <ListTree className='w-4 h-4' /> {subtaskCount} Subtask{subtaskCount > 1 ? 's' : ''}
                             </div>
                         )}
