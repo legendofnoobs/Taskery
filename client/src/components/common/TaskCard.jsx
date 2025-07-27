@@ -137,19 +137,6 @@ const TaskCard = ({
                                     }`}
                             ></div>
                         )}
-                        {/* Tags */}
-                        {task.tags && task.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 items-center">
-                                <span className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
-                                    <Tag className='w-4 h-4' /> {task.tags[0]}
-                                </span>
-                                {task.tags.length > 1 && (
-                                    <span className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
-                                        +{task.tags.length - 1}
-                                    </span>
-                                )}
-                            </div>
-                        )}
 
                         {/* Subtasks Count */}
                         {subtaskCount > 0 && (
@@ -162,6 +149,20 @@ const TaskCard = ({
                         {task.dueDate && (
                             <div className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
                                 {`Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+                            </div>
+                        )}
+
+                        {/* Tags */}
+                        {task.tags && task.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 items-center">
+                                <span className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700 flex items-center gap-1">
+                                    <Tag className='w-4 h-4' /> {task.tags[0]}
+                                </span>
+                                {task.tags.length > 1 && (
+                                    <span className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
+                                        +{task.tags.length - 1}
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
