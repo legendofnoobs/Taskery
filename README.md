@@ -1,158 +1,238 @@
 # Taskery - A MERN Stack Task Manager
 
-Welcome to Taskery! A full-stack task management application built with the MERN (MongoDB, Express.js, React.js, Node.js) stack. Taskery helps you organize your projects and tasks efficiently with a clean and intuitive user interface.
+> **Taskery** is a full-stack task management application built with the MERN (MongoDB, Express.js, React.js, Node.js) stack. It helps you organize your projects and tasks efficiently with a clean, modern, and intuitive user interface.
+
+---
 
 ## ✨ Features
 
-*   **User Authentication**: Secure user registration and login using JSON Web Tokens (JWT).
-*   **Project Management**: Create, view, update, and delete your projects.
-*   **Task Management**: Add, edit, and remove tasks within each project.
-*   **Favorite Projects**: Mark your important projects as favorites for quick access. The UI updates smoothly without flickering.
-*   **Responsive Design**: A clean and user-friendly interface that works on all devices.
-*   **Dark Theme**: Switch between light and dark modes for comfortable viewing.
+- **User Authentication**: Secure registration and login using JWT. Passwords are hashed with bcryptjs.
+- **Project Management**: Create, view, update, and delete projects. Edit project details and manage favorite projects.
+- **Task Management**: Add, edit, delete, and view tasks within projects. Tasks can be sorted, searched, and filtered.
+- **Favorite Projects**: Mark/unmark projects as favorites for quick access. Favorites are shown in a dedicated sidebar section.
+- **Inbox**: View all tasks assigned to you across all projects in a single inbox page.
+- **Activity Log**: Track all user and project activities (create, update, delete) in a dashboard log.
+- **Search**: Search tasks across all projects with instant results.
+- **Settings**: Update profile, change password, and manage notification preferences.
+- **Responsive Design**: Fully responsive UI for desktop, tablet, and mobile.
+- **Dark/Light Theme**: Toggle between dark and light modes.
+- **Modern UI**: Built with Tailwind CSS for a sleek, fast, and accessible experience.
+
+---
 
 ## 🛠️ Tech Stack
 
-The application is built using modern web technologies:
+### Frontend
+- **React.js** (SPA, hooks, context API)
+- **React Router** (routing)
+- **Axios** (API requests)
+- **Tailwind CSS** (utility-first styling)
+- **Vite** (fast dev/build tool)
 
-*   **Frontend**:
-    *   [React.js](https://reactjs.org/) - A JavaScript library for building user interfaces.
-    *   [React Router](https://reactrouter.com/) - For client-side routing and navigation.
-    *   [Axios](https://axios-http.com/) - For making promise-based HTTP requests to the backend API.
-    *   [React Context API](https://reactjs.org/docs/context.html) - For global state management (e.g., theme, user authentication).
-    *   [Tailwind CSS](https://tailwindcss.com/) / [Styled-Components](https://styled-components.com/) - For styling the application.
+### Backend
+- **Node.js** (runtime)
+- **Express.js** (API server)
+- **MongoDB** (database)
+- **Mongoose** (ODM)
+- **JWT** (authentication)
+- **bcryptjs** (password hashing)
+- **dotenv** (env management)
 
-*   **Backend**:
-    *   [Node.js](https://nodejs.org/) - JavaScript runtime environment.
-    *   [Express.js](https://expressjs.com/) - A minimal and flexible web framework for Node.js.
-    *   [MongoDB](https://www.mongodb.com/) - A NoSQL database for storing application data.
-    *   [Mongoose](https://mongoosejs.com/) - An Object Data Modeling (ODM) library for MongoDB and Node.js.
-    *   [JSON Web Token (JWT)](https://jwt.io/) - For implementing secure, token-based authentication.
-    *   [bcryptjs](https://www.npmjs.com/package/bcryptjs) - For hashing user passwords before storing them.
-    *   [dotenv](https://www.npmjs.com/package/dotenv) - For managing environment variables.
+---
 
-## 🚀 Getting Started
-
-Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
-
-### Prerequisites
-
-Make sure you have the following installed on your system:
-
-*   [Node.js](https://nodejs.org/en/download/) (v16 or later recommended)
-*   [npm](https://www.npmjs.com/get-npm) or [yarn](https://classic.yarnpkg.com/en/docs/install/)
-*   [MongoDB](https://www.mongodb.com/try/download/community) - Installed and running locally, or a connection string to a cloud instance (e.g., MongoDB Atlas).
-
-### Installation & Setup
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/legendofnoobs/Taskery.git
-    cd Taskery
-    ```
-
-2.  **Setup Backend:**
-    *   Navigate to the server directory (this might be the root directory or a `server/` folder).
-        ```bash
-        # If in a separate folder:
-        # cd server
-        npm install
-        ```
-    *   Create a `.env` file in the backend's root directory. You can copy the `.env.example` if one exists. Add the following environment variables:
-        ```env
-        PORT=5000
-        MONGO_URI=your_mongodb_connection_string
-        JWT_SECRET=your_super_secret_jwt_key
-        ```
-
-3.  **Setup Frontend:**
-    *   Navigate to the client directory (assuming it's named `client/`).
-        ```bash
-        # From the root directory:
-        cd client
-        npm install
-        ```
-    *   To ensure the frontend can communicate with the backend during development, you can add a `proxy` to your `client/package.json`:
-        ```json
-        "proxy": "http://localhost:5000"
-        ```
-
-### Running the Application
-
-1.  **Start the Backend Server:**
-    *   From the backend directory:
-        ```bash
-        npm run dev
-        ```
-    *   The server will start on `http://localhost:5000` (or the port you specified in `.env`).
-
-2.  **Start the Frontend Development Server:**
-    *   From the `client/` directory:
-        ```bash
-        npm run dev
-        ```
-    *   The application should open automatically in your browser at `http://localhost:3000`.
-
-## 📂 Project Structure
-
-The project follows a standard MERN structure, separating the client and server code for better organization and scalability.
+## 📂 Folder Structure
 
 ```
 task-manager/
-├── client/         # React Frontend
-│   ├── public/
+├── client/                # React Frontend
+│   ├── public/            # Static assets
 │   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   ├── App.js
-│   │   └── index.js
-│   ├── package.json
+│   │   ├── assets/        # Images, icons, etc.
+│   │   ├── components/    # Reusable UI components
+│   │   │   ├── common/    # Modals, cards, sidebar, etc.
+│   │   │   ├── landing/   # Landing page components
+│   │   │   ├── settings/  # Settings page components
+│   │   ├── context/       # React context providers (auth, etc.)
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── pages/         # Page-level components (Home, Login, Register, Dashboard, etc.)
+│   │   │   ├── dashboard/ # Dashboard sub-pages (Inbox, Projects, ActivityLog, etc.)
+│   │   ├── App.jsx        # Main app component
+│   │   ├── main.jsx       # Entry point
+│   │   └── index.css      # Global styles
+│   ├── package.json       # Frontend dependencies
+│   ├── vite.config.js     # Vite config
 │   └── ...
-├── server/         # Node.js/Express Backend
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── server.js
-│   ├── package.json
-│   └── .env.example
-├── .gitignore
-└── README.md
+├── server/                # Node.js/Express Backend
+│   ├── config/            # DB config
+│   ├── controllers/       # Route controllers
+│   ├── middleware/        # Auth middleware
+│   ├── models/            # Mongoose models
+│   │   └── schemaArch/    # JSON schema archive
+│   ├── routes/            # Express routes
+│   ├── server.js          # Entry point
+│   ├── package.json       # Backend dependencies
+│   └── vercel.json        # Vercel deployment config
+├── README.md
+└── ...
 ```
-*(Note: This is a representative structure. The actual folder names and layout might vary slightly.)*
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v16+ recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [MongoDB](https://www.mongodb.com/) (local or Atlas)
+
+### Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/legendofnoobs/Taskery.git
+   cd task-manager
+   ```
+
+2. **Backend setup:**
+   ```bash
+   cd server
+   npm install
+   # Create .env file (see .env.example)
+   # Example .env:
+   # PORT=5000
+   # MONGO_URI=your_mongodb_connection_string
+   # JWT_SECRET=your_super_secret_jwt_key
+   ```
+
+3. **Frontend setup:**
+   ```bash
+   cd ../client
+   npm install
+   # Optionally add to client/package.json:
+   # "proxy": "http://localhost:5000"
+   ```
+
+### Running the Application
+
+1. **Start backend:**
+   ```bash
+   cd server
+   npm run dev
+   # Server: http://localhost:5000
+   ```
+2. **Start frontend:**
+   ```bash
+   cd client
+   npm run dev
+   # App: http://localhost:3000
+   ```
+
+---
+
+## 🎨 UI Overview
+
+- **Landing Page**: Hero section, features, and footer.
+- **Auth Pages**: Login and Register forms.
+- **Dashboard**: Sidebar navigation, project cards, favorite projects, inbox, activity log, and search.
+- **Project Details**: Task list, create/edit/delete tasks, project settings.
+- **Task Details**: Modal/page for task info, edit, and delete.
+- **Settings**: Profile, password, and notification settings.
+
+---
+
+## 🔒 Authentication & Authorization
+
+- JWT-based authentication (token stored in localStorage).
+- Auth middleware protects all API routes except login/register.
+- Passwords are hashed with bcryptjs before storage.
+
+---
 
 ## 📖 API Endpoints
 
-The backend provides a RESTful API for managing users, projects, and tasks. All routes are protected and require authentication, except for login/register.
+### Auth/User
+- `POST /api/users/register` — Register new user
+- `POST /api/users/login` — Login and receive JWT
 
-### User Routes
-*   `POST /api/users/register` - Register a new user.
-*   `POST /api/users/login` - Log in a user and receive a JWT.
+### Projects
+- `GET /api/projects` — List all user projects
+- `POST /api/projects` — Create project
+- `GET /api/projects/:id` — Get project by ID
+- `PUT /api/projects/:id` — Update project
+- `DELETE /api/projects/:id` — Delete project
+- `PUT /api/projects/:id/favorite` — Toggle favorite
 
-### Project Routes
-*   `GET /api/projects` - Get all projects for the logged-in user.
-*   `POST /api/projects` - Create a new project.
-*   `GET /api/projects/:id` - Get a single project by its ID.
-*   `PUT /api/projects/:id` - Update a project's details.
-*   `DELETE /api/projects/:id` - Delete a project.
-*   `PUT /api/projects/:id/favorite` - Toggle the favorite status of a project.
+### Tasks
+- `GET /api/projects/:projectId/tasks` — List tasks in project
+- `POST /api/projects/:projectId/tasks` — Create task
+- `PUT /api/tasks/:taskId` — Update task
+- `DELETE /api/tasks/:taskId` — Delete task
 
-### Task Routes
-*   `GET /api/projects/:projectId/tasks` - Get all tasks for a specific project.
-*   `POST /api/projects/:projectId/tasks` - Create a new task within a project.
-*   `PUT /api/tasks/:taskId` - Update a task (e.g., content, status).
-*   `DELETE /api/tasks/:taskId` - Delete a task.
+### Activity Log
+- `GET /api/activity-logs` — List activity logs
+
+---
+
+## 🧩 Main Components & Hooks
+
+### Components
+- **common/**: Modals (create/edit/delete), Sidebar, ProjectCard, TaskCard, TaskDetailsModal, etc.
+- **landing/**: Hero, Features, Footer
+- **settings/**: Profile, Security, Notification settings
+- **dashboard/**: Inbox, Projects, ActivityLog, SearchPage
+
+### Hooks
+- `useAuth` — Auth state and actions
+- `useProjects` — Project CRUD
+- `useProjectTasks` — Task CRUD
+- `useFavoriteProjects` — Favorite/unfavorite logic
+- `useInboxTasks` — Inbox logic
+- `useActivityLogs` — Activity log fetch
+- `useSearchTasks` — Search logic
+- `useSidebarToggle` — Sidebar open/close
+- `useTaskCreation` — Task creation helpers
+- `useTaskSorting` — Task sorting
+- `useProfileSettings` — Profile update
+- `usePasswordSecurity` — Password change
+- `useNotificationSettings` — Notification prefs
+
+---
+
+## 🛡️ Security
+
+- Passwords hashed with bcryptjs
+- JWT tokens for authentication
+- Sensitive config in `.env` (never commit secrets)
+
+---
+
+## 🧪 Testing
+
+- Manual testing via UI and API endpoints
+
+
+---
+
+## 🌐 Deployment
+
+- Vercel config for both frontend and backend (`vercel.json` in each)
+- Environment variables set in Vercel dashboard
+
+---
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the issues page.
+Contributions, issues, and feature requests are welcome!
 
-1.  Fork the Project.
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the Branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add YourFeature'`)
+4. Push to your branch (`git push origin feature/YourFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE) for details.
