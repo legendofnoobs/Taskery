@@ -187,7 +187,7 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                     <>
                         {/* Incomplete Tasks Section */}
                         {incompleteTasks.length === 0 && completedTasks.length === 0 ? (
-                            <div className="text-gray-900 dark:text-white opacity-50 italic">No tasks in this project.</div>
+                            <div className="text-gray-900 dark:text-white opacity-50 italic">Start By Adding Some Tasks!</div>
                         ) : (
                             <>
                                 {incompleteTasks.length > 0 && (
