@@ -150,7 +150,7 @@ const InboxPage = () => {
                     <div className="relative" ref={optionsMenuRef}>
                         <button
                             onClick={() => setShowOptionsMenu(prev => !prev)}
-                            className="p-2 rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-100/10 transition-colors text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="p-2 rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-100/10 transition-colors text-gray-900 dark:text-white focus:bg-zinc-100/10"
                             aria-label="Task Options"
                         >
                             <MoreVertical className="w-5 h-5" />

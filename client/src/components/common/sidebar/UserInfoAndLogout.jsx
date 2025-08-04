@@ -48,7 +48,7 @@ const UserInfoAndLogout = () => {
             {user && (
                 <button
                     onClick={toggleDropdown}
-                    className="flex items-center justify-between w-full p-2 rounded-full hover:bg-blue-200 dark:hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center justify-between w-full p-2 rounded-full hover:bg-blue-200 dark:hover:bg-zinc-700 transition-colors dark:focus:bg-zinc-700"
                 >
                     <div className="flex items-center">
                         <img
