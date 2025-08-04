@@ -13,6 +13,22 @@ async function logActivity({ userId, action, entityType = "task", targetId }) {
     });
 }
 
+// Define a mapping for priority strings to numbers
+const priorityMap = {
+    'low': 1,
+    'medium': 2,
+    'high': 3,
+    'urgent': 4
+};
+
+// Helper function to convert priority string to number
+function getPriorityNumber(priorityString) {
+    return priorityMap[priorityString.toLowerCase()] !== undefined
+        ? priorityMap[priorityString.toLowerCase()]
+        : null; // Or a default number if 'none' is not explicitly handled as 0
+}
+
+
 // Create a new task
 export async function createTask(req, res) {
     try {
@@ -20,19 +36,22 @@ export async function createTask(req, res) {
             content,
             description,
             projectId,
-            priority,
+            priority, // This will be a string from the frontend
             dueDate,
             tags = [],
             order,
             parentId,
         } = req.body;
 
+        // Convert priority string to number before saving
+        const numericalPriority = getPriorityNumber(priority);
+
         const task = await Task.create({
             content,
             description,
             projectId,
             ownerId: req.user._id,
-            priority,
+            priority: numericalPriority, // Use the numerical value
             dueDate,
             tags,
             order,
@@ -51,22 +70,68 @@ export async function createTask(req, res) {
     }
 }
 
-// Get all tasks for a project, with optional parentId filtering
-// MODIFIED: Now includes subtaskCount for top-level tasks
+// Get all tasks for a project, with optional parentId, dueDate, and priority filtering
 export async function getTasksByProject(req, res) {
     try {
         const { projectId } = req.params;
-        const { parentId } = req.query; // Get the parentId query parameter
+        const { parentId, dueDate: filterDueDate, priority: filterPriority } = req.query; // Get filter parameters
 
         let query = {
             projectId: new mongoose.Types.ObjectId(projectId), // Ensure projectId is an ObjectId
             ownerId: req.user._id,
         };
 
+        // Filter by parentId
         if (parentId === 'null' || parentId === undefined) {
             query.parentId = null; // Filter for top-level tasks
         } else if (parentId) {
             query.parentId = new mongoose.Types.ObjectId(parentId); // Filter by specific parentId
+        }
+
+        // --- Date Filtering Logic ---
+        if (filterDueDate && filterDueDate !== 'all') {
+            const today = new Date();
+            today.setUTCHours(0, 0, 0, 0); // Start of today in UTC
+
+            const tomorrow = new Date(today);
+            tomorrow.setUTCDate(today.getUTCDate() + 1); // Start of tomorrow in UTC
+
+            const endOfTomorrow = new Date(tomorrow);
+            endOfTomorrow.setUTCHours(23, 59, 59, 999); // End of tomorrow in UTC
+
+            const startOfWeek = new Date(today);
+            startOfWeek.setUTCDate(today.getUTCDate() - today.getUTCDay()); // Start of current week (Sunday) in UTC
+            startOfWeek.setUTCHours(0, 0, 0, 0);
+
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setUTCDate(startOfWeek.getUTCDate() + 6); // End of current week (Saturday) in UTC
+            endOfWeek.setUTCHours(23, 59, 59, 999);
+
+            switch (filterDueDate) {
+                case 'today':
+                    query.dueDate = { $gte: today, $lte: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1) }; // End of today
+                    break;
+                case 'tomorrow':
+                    query.dueDate = { $gte: tomorrow, $lte: endOfTomorrow };
+                    break;
+                case 'this_week':
+                    query.dueDate = { $gte: startOfWeek, $lte: endOfWeek };
+                    break;
+                case 'overdue':
+                    query.dueDate = { $lt: today };
+                    query.isCompleted = false; // Only overdue if not completed
+                    break;
+                // 'all' case is handled by not adding dueDate to query
+            }
+        }
+
+        // --- Priority Filtering Logic ---
+        if (filterPriority && filterPriority !== 'all') {
+            // Convert filterPriority string to number before querying
+            const numericalFilterPriority = getPriorityNumber(filterPriority);
+            if (numericalFilterPriority !== null) {
+                query.priority = numericalFilterPriority;
+            }
         }
 
         let tasks = await Task.find(query).sort({ order: 1, createdAt: -1 }).lean();
@@ -75,16 +140,16 @@ export async function getTasksByProject(req, res) {
             tasks = await Promise.all(tasks.map(async (task) => {
                 const subtaskCount = await Task.countDocuments({
                     parentId: task._id,
-                    ownerId: req.user._id // Ensure we only count subtasks owned by the user
+                    ownerId: req.user._id
                 });
-                return { ...task, subtaskCount }; // Add subtaskCount to the task object
+                return { ...task, subtaskCount };
             }));
         }
 
         res.status(200).json(tasks);
     } catch (error) {
-        console.error('Failed to get tasks for project:', error); // Log the actual error
-        res.status(500).json({ message: "Failed to get tasks", error: error.message }); // Send error message
+        console.error('Failed to get tasks for project:', error);
+        res.status(500).json({ message: "Failed to get tasks", error: error.message });
     }
 }
 
@@ -107,9 +172,18 @@ export async function getTaskById(req, res) {
 // Update task
 export async function updateTask(req, res) {
     try {
+        const { priority, ...otherUpdates } = req.body; // Destructure priority
+
+        const updates = { ...otherUpdates };
+
+        // Convert priority string to number if it's being updated
+        if (priority !== undefined) {
+            updates.priority = getPriorityNumber(priority);
+        }
+
         const task = await Task.findOneAndUpdate(
             { _id: req.params.id, ownerId: req.user._id },
-            req.body,
+            updates, // Use the updates object
             { new: true }
         );
 
@@ -262,12 +336,6 @@ export async function searchTasks(req, res) {
         // Create a case-insensitive regex for searching
         const searchRegex = new RegExp(query, 'i');
 
-        // --- DEBUGGING LOGS ---
-        console.log('Search Query:', query);
-        console.log('Search Regex:', searchRegex);
-        console.log('Owner ID (as string):', ownerId); // Log as ownerId
-        // --- END DEBUGGING LOGS ---
-
         const tasks = await Task.find({
             ownerId: ownerId, // Changed from userId to ownerId
             $or: [
@@ -275,10 +343,6 @@ export async function searchTasks(req, res) {
                 { tags: { $regex: searchRegex } }    // Correct way to search for regex in array elements
             ]
         }).sort({ createdAt: -1 }); // Sort by creation date, newest first
-
-        // --- DEBUGGING LOGS ---
-        console.log('Found Tasks:', tasks);
-        // --- END DEBUGGING LOGS ---
 
         res.status(200).json(tasks);
     } catch (error) {
