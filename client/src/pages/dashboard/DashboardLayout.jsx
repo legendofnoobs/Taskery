@@ -1,17 +1,10 @@
-/* eslint-disable no-unused-vars */
 // src/pages/dashboard/DashboardLayout.jsx
 import { Outlet, useNavigate } from 'react-router-dom'
 import Sidebar from '../../components/common/Sidebar'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import useAuth from '../../context/useAuth'
-import { use } from 'react'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const DashboardLayout = () => {
-    const [projects, setProjects] = useState([])
-    const [selectedProjectId, setSelectedProjectId] = useState('')
-    const [error, setError] = useState(null)
     const {user} = useAuth()
     const navigate = useNavigate()
 

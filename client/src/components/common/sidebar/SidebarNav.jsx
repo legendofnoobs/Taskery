@@ -11,8 +11,7 @@ const SidebarNav = ({ closeSidebar,
         { icon: Search, name: 'Search', path: '/dashboard/search' },
         { icon: Inbox, name: 'Inbox', path: '/dashboard/inbox' },
         { icon: FolderKanban, name: 'Projects', path: '/dashboard/projects' },
-        { icon: FileClock, name: 'Activity Log', path: '/dashboard/activity-log' },
-        { icon: Cog, name: 'Settings', path: '/dashboard/settings' },
+        { icon: FileClock, name: 'Activity Log', path: '/dashboard/activity-log' }
     ];
 
     return (
@@ -48,15 +47,6 @@ const SidebarNav = ({ closeSidebar,
                     </button>
                 );
             })}
-            <a
-                // Apply conditional classes based on 'isActive'
-                className={`flex items-center gap-x-3 w-full text-left px-3 py-2 rounded-full transition-colors dark:hover:bg-zinc-700 hover:bg-blue-200 dark:text-white`}
-                href='https://github.com/legendofnoobs/Taskery'
-                target='_blank'
-                rel='noopener noreferrer'
-            >
-                <Github /> Leave a star
-            </a>
         </nav>
     );
 };

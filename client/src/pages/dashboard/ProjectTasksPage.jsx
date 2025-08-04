@@ -153,11 +153,11 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
         <div className="md:ml-72 mt-8 px-4 py-6">
             {/* Fixed Header for Project Title and Add Task Button */}
             <div className="fixed top-0 left-0 right-0 md:left-72 z-10 bg-white/50 dark:bg-zinc-900/50 px-4 py-6 flex items-center justify-between backdrop-blur-md">
-                <h1 className="flex items-center gap-2 text-xl md:text-2xl font-bold text-gray-900 dark:text-white"> {/* Applied static colors */}
+                <h1 className="flex items-center gap-2 text-xl md:text-2xl font-bold text-gray-900 dark:text-white truncate"> {/* Applied static colors */}
                     <button onClick={onBackToProjects} className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors mr-2 ml-12 md:ml-0" aria-label="Back to Projects"> {/* Applied static colors */}
                         <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" /> {/* Applied static colors */}
                     </button>
-                    <FolderKanban className="w-6 h-6" />
+                    <FolderKanban className="w-6 h-6 hidden sm:block" />
                     {project.name}
                 </h1>
                 <div className="flex items-center gap-4"> {/* Container for buttons */}
