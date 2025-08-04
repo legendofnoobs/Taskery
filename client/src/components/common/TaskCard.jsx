@@ -44,7 +44,7 @@ const TaskCard = ({
             transition: {
                 type: "spring", // Use a spring animation for a bouncier feel
                 stiffness: 200, // Stiffness of the spring
-                damping: 20   // Damping to reduce oscillation
+                damping: 20    // Damping to reduce oscillation
             }
         },
         exit: {
@@ -56,25 +56,39 @@ const TaskCard = ({
         }
     };
 
+    // Helper function to convert numerical priority to a human-readable string
+    const getPriorityString = (priorityNumber) => {
+        const num = Number(priorityNumber); // Ensure priority is treated as a number
+        switch (num) {
+            case 1: return 'Low';
+            case 2: return 'Medium';
+            case 3: return 'High';
+            case 4: return 'Urgent';
+            default: return 'Low'; // Default to 'Low' if null, undefined, or unrecognized numbers
+        }
+    };
+
     // Determine priority color based on numeric value for text color
     const getPriorityColor = (priority) => {
-        switch (priority) {
+        const num = Number(priority); // Ensure priority is treated as a number
+        switch (num) {
             case 1: return 'text-blue-500'; // Low
             case 2: return 'text-green-500'; // Medium
             case 3: return 'text-yellow-500'; // High
             case 4: return 'text-red-500'; // Urgent
-            default: return 'text-gray-400'; // Default/No priority
+            default: return 'text-blue-500'; // Default to 'Low' priority color
         }
     };
 
     // Determine priority background color for the dot
     const getPriorityDotColor = (priority) => {
-        switch (priority) {
+        const num = Number(priority); // Ensure priority is treated as a number
+        switch (num) {
             case 1: return 'bg-blue-500'; // Low
             case 2: return 'bg-green-500'; // Medium
             case 3: return 'bg-yellow-500'; // High
             case 4: return 'bg-red-500'; // Urgent
-            default: return 'bg-gray-400'; // Default/No priority
+            default: return 'bg-blue-500'; // Default to 'Low' priority dot color
         }
     };
 
@@ -128,15 +142,12 @@ const TaskCard = ({
                     {task.description && <p className="text-gray-700 dark:text-zinc-400 text-sm mt-1">{truncatedDescription}</p>}
                     <div className='flex flex-wrap gap-2 items-center mt-2'>
                         {/* Priority Dot */}
-                        {task.priority !== undefined && task.priority !== null && (
-                            <div
-                                className={`w-2 h-2 rounded-full ${getPriorityDotColor(task.priority)}`}
-                                title={`Priority: ${typeof task.priority === 'string'
-                                    ? task.priority.charAt(0).toUpperCase() + task.priority.slice(1)
-                                    : task.priority
-                                    }`}
-                            ></div>
-                        )}
+                        {/* The dot will now always show, defaulting to 'Low' if priority is null/undefined */}
+                        <div
+                            className={`w-2 h-2 rounded-full ${getPriorityDotColor(task.priority)}`}
+                            // Use the new helper function for a more descriptive tooltip
+                            title={`Priority: ${getPriorityString(task.priority)}`} 
+                        ></div>
 
                         {/* Due Date */}
                         {task.dueDate && (

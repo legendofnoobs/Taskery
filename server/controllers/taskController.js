@@ -21,13 +21,21 @@ const priorityMap = {
     'urgent': 4
 };
 
-// Helper function to convert priority string to number
-function getPriorityNumber(priorityString) {
-    return priorityMap[priorityString.toLowerCase()] !== undefined
-        ? priorityMap[priorityString.toLowerCase()]
-        : null; // Or a default number if 'none' is not explicitly handled as 0
+// Helper function to convert priority string or number to a numerical priority
+function getPriorityNumber(priorityInput) {
+    // If the input is already a number, and it's one of our valid priority numbers, return it directly.
+    if (typeof priorityInput === 'number' && [1, 2, 3, 4].includes(priorityInput)) {
+        return priorityInput;
+    }
+    // If the input is a string, convert it to lowercase and check the map.
+    if (typeof priorityInput === 'string') {
+        const numericalValue = priorityMap[priorityInput.toLowerCase()];
+        // Return the numerical value if found, otherwise return null.
+        return numericalValue !== undefined ? numericalValue : null; 
+    }
+    // For any other type (null, undefined, or invalid non-string/non-number), return null.
+    return null; 
 }
-
 
 // Create a new task
 export async function createTask(req, res) {
@@ -43,6 +51,16 @@ export async function createTask(req, res) {
             parentId,
         } = req.body;
 
+        // Basic validation: Ensure required fields are present
+        if (!content || !projectId) {
+            return res.status(400).json({ message: "Content and Project ID are required." });
+        }
+
+        // Ensure req.user._id is available (set by authMiddleware)
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ message: "User not authenticated or user ID missing." });
+        }
+
         // Convert priority string to number before saving
         const numericalPriority = getPriorityNumber(priority);
 
@@ -51,7 +69,7 @@ export async function createTask(req, res) {
             description,
             projectId,
             ownerId: req.user._id,
-            priority: numericalPriority, // Use the numerical value
+            priority: numericalPriority, // Use the numerical value (will be null if not matched)
             dueDate,
             tags,
             order,
@@ -66,7 +84,9 @@ export async function createTask(req, res) {
 
         res.status(201).json(task);
     } catch (error) {
-        res.status(500).json({ message: "Failed to create task", error });
+        console.error('Error creating task:', error); // Log the full error for debugging
+        // Provide a more descriptive error message
+        res.status(500).json({ message: "Failed to create task", error: error.message });
     }
 }
 
@@ -127,10 +147,13 @@ export async function getTasksByProject(req, res) {
 
         // --- Priority Filtering Logic ---
         if (filterPriority && filterPriority !== 'all') {
-            // Convert filterPriority string to number before querying
             const numericalFilterPriority = getPriorityNumber(filterPriority);
-            if (numericalFilterPriority !== null) {
+            // Only add to query if it's a valid numerical priority (not null)
+            if (numericalFilterPriority !== null) { 
                 query.priority = numericalFilterPriority;
+            } else {
+                // If filterPriority is an unrecognized string and getPriorityNumber returns null,
+                // we don't add priority to the query, effectively treating it as 'all' for unknown values.
             }
         }
 
@@ -176,9 +199,13 @@ export async function updateTask(req, res) {
 
         const updates = { ...otherUpdates };
 
-        // Convert priority string to number if it's being updated
-        if (priority !== undefined) {
-            updates.priority = getPriorityNumber(priority);
+        // Convert priority string to number if it's being updated.
+        // If 'priority' is explicitly provided in the request body (even as null or an empty string),
+        // we process it to set the database field to null if it's not a recognized priority string.
+        // If 'priority' is undefined (meaning it wasn't sent in the request body),
+        // we don't include it in the updates, leaving the database field unchanged.
+        if (priority !== undefined) { 
+            updates.priority = getPriorityNumber(priority); // Use the helper function
         }
 
         const task = await Task.findOneAndUpdate(
@@ -224,18 +251,32 @@ export async function deleteTask(req, res) {
 }
 
 // Search tasks by tag
-export async function searchByTag(req, res) {
+export async function searchTasks(req, res) { // Renamed from searchByTag to searchTasks based on router.get('/search')
     try {
-        const tag = req.query.tag;
+        const { query } = req.query; // Access the query parameter
+        // Convert req.user._id to string to ensure consistent type for query
+        const ownerId = req.user._id.toString(); // Renamed to ownerId for clarity
+
+        if (!query) {
+            // If the query is empty, return an empty array of tasks
+            return res.status(200).json([]);
+        }
+
+        // Create a case-insensitive regex for searching
+        const searchRegex = new RegExp(query, 'i');
 
         const tasks = await Task.find({
-            ownerId: req.user._id,
-            tags: { $in: [tag] },
-        });
+            ownerId: ownerId, // Changed from userId to ownerId
+            $or: [
+                { content: { $regex: searchRegex } }, // Search in task content
+                { tags: { $regex: searchRegex } }    // Correct way to search for regex in array elements
+            ]
+        }).sort({ createdAt: -1 }); // Sort by creation date, newest first
 
         res.status(200).json(tasks);
     } catch (error) {
-        res.status(500).json({ message: "Failed to search tasks by tag", error });
+        console.error('Error searching tasks:', error);
+        res.status(500).json({ message: "Failed to search tasks", error });
     }
 }
 
@@ -319,34 +360,5 @@ export async function getSubtaskCompletionPercentage(req, res) {
         res.status(200).json({ percentage });
     } catch (error) {
         res.status(500).json({ message: "Failed to calculate completion", error });
-    }
-}
-
-export async function searchTasks(req, res) {
-    try {
-        const { query } = req.query; // Access the query parameter
-        // Convert req.user._id to string to ensure consistent type for query
-        const ownerId = req.user._id.toString(); // Renamed to ownerId for clarity
-
-        if (!query) {
-            // If the query is empty, return an empty array of tasks
-            return res.status(200).json([]);
-        }
-
-        // Create a case-insensitive regex for searching
-        const searchRegex = new RegExp(query, 'i');
-
-        const tasks = await Task.find({
-            ownerId: ownerId, // Changed from userId to ownerId
-            $or: [
-                { content: { $regex: searchRegex } }, // Search in task content
-                { tags: { $regex: searchRegex } }    // Correct way to search for regex in array elements
-            ]
-        }).sort({ createdAt: -1 }); // Sort by creation date, newest first
-
-        res.status(200).json(tasks);
-    } catch (error) {
-        console.error('Error searching tasks:', error);
-        res.status(500).json({ message: "Failed to search tasks", error });
     }
 }

@@ -24,5 +24,4 @@ router.get('/search', searchTasks); // This should come before /:id
 
 router.get("/:id", getTaskById);
 
-
 export default router;

@@ -1,73 +1,135 @@
-// src/hooks/useProjectTasks.js
-
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Valid filter options (kept for sanitizeFilters)
+const VALID_DUE_DATE_FILTERS = ['all', 'today', 'tomorrow', 'this_week', 'overdue'];
+const VALID_PRIORITY_FILTERS = ['all', 'none', 'low', 'medium', 'high', 'urgent'];
+
 /**
- * Custom hook to manage tasks for a specific project.
- * It provides fetching, and CRUD operations with optimistic updates.
- *
- * @param {object} project - The project object for which tasks are managed.
+ * Custom hook to manage tasks for a specific project with advanced filtering capabilities.
+ * It reads and updates filters from URL search parameters, and fetches tasks from the API.
+ * * @param {object} project - The project object for which tasks are managed
+ * @returns {object} - An object containing tasks, loading state, error, filter values,
+ * and CRUD operations.
  */
 export const useProjectTasks = (project) => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // Get current filter values from URL search parameters
+    const dueDateFilter = searchParams.get('dueDate') || 'all';
+    const priorityFilter = searchParams.get('priority') || 'all';
+    const taskIdFromUrl = searchParams.get('taskId'); // Still read taskId from URL
 
     const token = localStorage.getItem('token');
 
     /**
-     * Fetches tasks specifically for the current project, where parentId is null.
-     * Memoized with useCallback to prevent unnecessary re-creations.
+     * Updates URL search parameters while preserving existing ones.
+     * If a value is 'null' or 'all', the parameter is removed from the URL.
+     * @param {object} updates - Key-value pairs to update in URL (e.g., { dueDate: 'today' })
+     */
+    const updateSearchParams = useCallback((updates) => {
+        const newParams = new URLSearchParams(searchParams);
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === 'all') {
+                newParams.delete(key);
+            } else {
+                newParams.set(key, value);
+            }
+        });
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams]);
+
+    /**
+     * Validates and sanitizes filter values from URL.
+     * If URL params contain invalid filter values, they are corrected to 'all' and the URL is updated.
+     * @returns {object} - Sanitized filter values.
+     */
+    const sanitizeFilters = useCallback(() => {
+        const sanitized = {
+            dueDate: VALID_DUE_DATE_FILTERS.includes(dueDateFilter) ? dueDateFilter : 'all',
+            priority: VALID_PRIORITY_FILTERS.includes(priorityFilter) ? priorityFilter : 'all'
+        };
+        
+        // Update URL if filters needed sanitization
+        if (sanitized.dueDate !== dueDateFilter || sanitized.priority !== priorityFilter) {
+            updateSearchParams({
+                dueDate: sanitized.dueDate,
+                priority: sanitized.priority
+            });
+        }
+        
+        return sanitized;
+    }, [dueDateFilter, priorityFilter, updateSearchParams]);
+
+    /**
+     * Fetches tasks for the current project with applied filters.
+     * This function is memoized and re-runs when project, token, or sanitized filters change.
      */
     const fetchProjectTasks = useCallback(async () => {
+        // Do not fetch if project ID or token is missing
+        if (!project?._id || !token) {
+            setTasks([]);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         setError(null);
-        try {
-            if (!token) {
-                setError('Authentication token not found. Please log in.');
-                setLoading(false);
-                setTasks([]); // Clear tasks if not authenticated
-                return;
-            }
-            if (!project || !project._id) {
-                setError('Project information is missing.');
-                setLoading(false);
-                setTasks([]); // Clear tasks if project info is missing
-                return;
-            }
 
-            console.log(`useProjectTasks: Fetching top-level tasks for project ID: ${project._id}`);
-            const res = await axios.get(`${API_URL}/tasks/project/${project._id}?parentId=null`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setTasks(res.data);
-            console.log(`useProjectTasks: Top-level tasks fetched successfully for project ${project.name || 'N/A'}:`, res.data.length, "tasks.");
+        try {
+            const { dueDate, priority } = sanitizeFilters(); // Get sanitized filters
+            const params = new URLSearchParams();
+            
+            // Always include projectId as a query param for tasks endpoint if needed,
+            // or ensure the endpoint itself uses the project ID from the path.
+            // Assuming the endpoint '/tasks/project/:projectId' handles this.
+            
+            // Add filters to params if not 'all'
+            if (dueDate !== 'all') params.append('dueDate', dueDate);
+            if (priority !== 'all') params.append('priority', priority);
+
+            // If taskIdFromUrl is present, fetch only that specific task
+            if (taskIdFromUrl) {
+                const url = `${API_URL}/tasks/${taskIdFromUrl}`;
+                const res = await axios.get(url, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setTasks([res.data]); // Set tasks to an array containing only the fetched task
+            } else {
+                // Otherwise, fetch all tasks for the project with applied filters
+                // Ensure parentId=null is sent to get top-level tasks
+                params.append('parentId', 'null'); 
+                const url = `${API_URL}/tasks/project/${project._id}?${params.toString()}`;
+                const res = await axios.get(url, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setTasks(res.data);
+            }
         } catch (err) {
-            console.error(`useProjectTasks: Failed to fetch top-level tasks for project ${project?.name || 'N/A'}:`, err);
-            setError(err.response?.data?.message || `Failed to fetch tasks for ${project?.name || 'this project'}.`);
-            setTasks([]); // Clear tasks on error
+            console.error('Failed to fetch tasks:', err);
+            setError(err.response?.data?.message || 'Failed to load tasks');
+            setTasks([]);
         } finally {
             setLoading(false);
         }
-    }, [project, token]); // Depend on project (for _id and name) and token
+    }, [project, token, sanitizeFilters, taskIdFromUrl]); // Re-fetch when taskIdFromUrl changes
 
-    // Fetch tasks when the project or token changes
+    // Effect to trigger task fetching when dependencies change
     useEffect(() => {
-        if (project && project._id) {
-            fetchProjectTasks();
-        }
-    }, [project, fetchProjectTasks]); // Depend on project and the memoized fetchProjectTasks
+        fetchProjectTasks();
+    }, [fetchProjectTasks]);
 
     /**
-     * Handles the creation of a new task for the current project.
-     * This operation *does* benefit from a full re-fetch because a new task
-     * receives a server-generated ID and might affect parent subtask counts.
-     * However, we can still provide optimistic feedback first.
+     * Creates a new task with optimistic updates.
      * @param {object} taskData - The data for the new task.
+     * @returns {boolean} - True if optimistic update was applied, false otherwise.
      */
     const handleCreateTask = async (taskData) => {
         if (!project || !project._id || !token) {
@@ -96,9 +158,6 @@ export const useProjectTasks = (project) => {
                 .then(res => {
                     // Replace the optimistic task with the real one from the server
                     setTasks(prevTasks => prevTasks.map(t => t._id === tempId ? res.data : t));
-                    // After successful creation, a re-fetch is still the safest bet
-                    // to ensure all related counts (e.g., parent's subtaskCount) are accurate.
-                    // fetchProjectTasks();
                     return 'Task added!';
                 }),
             {
@@ -117,185 +176,161 @@ export const useProjectTasks = (project) => {
     };
 
     /**
-     * Toggles the completion status of a task.
-     * This operation often affects derived properties like "completed subtask count"
-     * on parent tasks, thus a re-fetch is justified after the optimistic update.
+     * Toggles task completion status with optimistic updates.
      * @param {object} task - The task object to toggle.
      */
     const toggleComplete = async (task) => {
         if (!token) {
-            toast.error('Authentication required to update task.');
+            toast.error('Authentication required');
             return;
         }
 
         const originalIsCompleted = task.isCompleted;
         const nextIsCompleted = !originalIsCompleted;
 
-        // Optimistic update for immediate visual feedback
-        setTasks(prev =>
-            prev.map(t => (t._id === task._id ? { ...t, isCompleted: nextIsCompleted } : t))
-        );
+        setTasks(prev => prev.map(t => 
+            t._id === task._id ? { ...t, isCompleted: nextIsCompleted } : t
+        ));
 
         try {
             const endpoint = nextIsCompleted ? 'complete' : 'uncomplete';
-            const { data } = await axios.patch(
+            await axios.patch(
                 `${API_URL}/tasks/${task._id}/${endpoint}`,
-                {}, // Empty body for PATCH /complete or /uncomplete
+                {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
-            // A re-fetch is still recommended here because toggling completion
-            // of a subtask might change the completion status of its parent task,
-            // or modify 'completedSubtaskCount' which is a derived property.
-            // await fetchProjectTasks();
-            toast.success(`Task marked as ${data.isCompleted ? 'completed' : 'incomplete'}!`);
+            toast.success(`Task marked as ${nextIsCompleted ? 'completed' : 'incomplete'}`);
         } catch (err) {
-            console.error('useProjectTasks: Failed to toggle task completion:', err);
-            toast.error(err.response?.data?.message || 'Failed to update task completion.');
-            // Revert optimistic update on failure
-            setTasks(prev =>
-                prev.map(t => (t._id === task._id ? { ...t, isCompleted: originalIsCompleted } : t))
-            );
-            fetchProjectTasks(); // Fallback hard refresh
+            console.error('Failed to toggle completion:', err);
+            setTasks(prev => prev.map(t => 
+                t._id === task._id ? { ...t, isCompleted: originalIsCompleted } : t
+            ));
+            toast.error(err.response?.data?.message || 'Failed to update task');
         }
     };
 
     /**
-     * Helper function to find differences between two task objects.
-     * Used to send only changed fields to the backend.
-     * @param {object} original - The original task object from state.
-     * @param {object} next - The new task object from the modal.
-     * @returns {object} - An object containing only the changed fields.
+     * Updates an existing task with only changed fields.
+     * @param {object} updatedTask - The updated task object.
+     * @returns {boolean} - True if update was successful or no changes, false otherwise.
      */
-    function diffTask(original, next) {
+    const handleUpdateTask = async (updatedTask) => {
+        if (!token) {
+            toast.error('Authentication required');
+            return false;
+        }
+
+        // Find the current version of the task in the state
+        const currentTask = tasks.find(t => t._id === updatedTask._id);
+        if (!currentTask) {
+            toast.error('Task not found in current list.');
+            // If the task isn't in the current list (e.g., due to filtering),
+            // a full re-fetch might be needed to ensure consistency.
+            fetchProjectTasks(); 
+            return false;
+        }
+
         const payload = {};
-        for (const key of Object.keys(next)) {
-            // Skip _id and any other keys that should not be updated via PUT/PATCH,
-            // including 'subtaskCount' as it's a derived property.
-            if (key === '_id' || key === 'projectId' || key === 'ownerId' || key === '__v' || key === 'createdAt' || key === 'updatedAt' || key === 'subtaskCount') continue;
-            // Compare values, ensuring date objects are compared by their string representation
-            if (original[key] instanceof Date && next[key] instanceof Date) {
-                if (original[key].toISOString() !== next[key].toISOString()) {
-                    payload[key] = next[key];
-                }
-            } else if (JSON.stringify(original[key]) !== JSON.stringify(next[key])) { // Deep comparison for arrays (tags)
-                payload[key] = next[key];
+        Object.keys(updatedTask).forEach(key => {
+            // Exclude backend-managed or derived fields from payload
+            if (['_id', 'projectId', 'ownerId', '__v', 'createdAt', 'updatedAt', 'subtaskCount'].includes(key)) return;
+            
+            // Deep comparison for objects/arrays, direct comparison for primitives
+            if (JSON.stringify(currentTask[key]) !== JSON.stringify(updatedTask[key])) {
+                payload[key] = updatedTask[key];
             }
-        }
-        return payload;
-    }
+        });
 
-    /**
-     * Handles the update of an existing task.
-     * This method prioritizes maintaining UI fluidity for edits that *don't*
-     * change the list's structure or fundamentally alter derived properties
-     * like subtask counts that are tied to relationships.
-     * @param {object} updatedTaskFromModal - The updated task object from the modal.
-     */
-    const handleUpdateTask = async (updatedTaskFromModal) => {
-        const currentToken = localStorage.getItem('token');
-        if (!currentToken) {
-            toast.error('Authentication required to update task.');
-            return false;
-        }
-
-        const currentTaskInState = tasks.find(t => t._id === updatedTaskFromModal._id);
-        if (!currentTaskInState) {
-            toast.error('Task not found in UI state.');
-            return false;
-        }
-
-        const payloadToSend = diffTask(currentTaskInState, updatedTaskFromModal);
-
-        // Ensure isCompleted is always included in payload if it changed or not
-        // as it might be explicitly set in the modal
-        if (payloadToSend.isCompleted === undefined) {
-            payloadToSend.isCompleted = currentTaskInState.isCompleted;
-        }
-
-        if (Object.keys(payloadToSend).length === 0) {
-            toast('Nothing to update.');
+        if (Object.keys(payload).length === 0) {
+            toast('No changes detected');
             return true;
         }
 
-        // Optimistic update: Merge the updated fields but crucially *keep*
-        // subtaskCount from currentTaskInState, as the backend PUT might not return it.
         const originalTasks = tasks; // Store for rollback
-        const optimisticTask = {
-            ...currentTaskInState, // Start with the current state (includes subtaskCount)
-            ...payloadToSend,      // Apply only the explicitly changed fields
-        };
-
-        setTasks(prev =>
-            prev.map(t => (t._id === currentTaskInState._id ? optimisticTask : t))
-        );
+        setTasks(prev => prev.map(t => 
+            t._id === updatedTask._id ? { ...t, ...payload } : t
+        ));
 
         try {
-            // Make the API call with only the changed fields
             await axios.put(
-                `${API_URL}/tasks/${currentTaskInState._id}`,
-                payloadToSend,
-                { headers: { Authorization: `Bearer ${currentToken}` } }
+                `${API_URL}/tasks/${updatedTask._id}`,
+                payload,
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-
-            // Crucial: We DO NOT fetchProjectTasks here for typical edits (content, due date, priority).
-            // The optimistic update handles the UI transition smoothly.
-            // If the backend PUT *does* return an updated subtaskCount, you could merge it here,
-            // but generally, simple edits don't affect subtask counts.
             toast.success('Task updated!');
             return true;
         } catch (err) {
-            console.error('useProjectTasks: Failed to update task:', err);
-            toast.error(err.response?.data?.message || 'Failed to update task.');
-            // Rollback optimistic update on failure
-            setTasks(originalTasks);
-            fetchProjectTasks(); // Fallback hard refresh to ensure consistency
+            console.error('Failed to update task:', err);
+            setTasks(originalTasks); // Rollback on error
+            toast.error(err.response?.data?.message || 'Failed to update task');
+            // Re-fetch to ensure UI consistency after rollback/error
+            fetchProjectTasks(); 
             return false;
         }
     };
 
     /**
-     * Executes the task deletion after confirmation.
-     * This operation inherently changes the list structure and might affect
-     * parent subtask counts, making a re-fetch beneficial.
+     * Deletes a task with optimistic updates.
      * @param {string} taskId - The ID of the task to delete.
+     * @returns {boolean} - True if deletion was successful, false otherwise.
      */
     const handleDeleteTaskConfirmed = async (taskId) => {
         if (!token) {
-            toast.error('Authentication required to delete task.');
+            toast.error('Authentication required');
             return false;
         }
 
-        // Optimistic update: Remove the task immediately from the UI
         const originalTasks = tasks; // Store for rollback
-        setTasks(prevTasks => prevTasks.filter(t => t._id !== taskId));
+        setTasks(prev => prev.filter(t => t._id !== taskId));
 
         try {
             await axios.delete(`${API_URL}/tasks/${taskId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success("Task deleted!");
-            // After deletion, re-fetch to ensure any potential parent tasks' subtask counts are updated
-            // await fetchProjectTasks(); // Re-fetch for full accuracy and derived properties
+            toast.success('Task deleted!');
             return true;
         } catch (err) {
-            console.error('useProjectTasks: Failed to delete task:', err);
-            toast.error(err.response?.data?.message || 'Failed to delete task.');
-            // Revert optimistic update or re-fetch on failure
-            setTasks(originalTasks); // Rollback
-            fetchProjectTasks(); // Fallback re-fetch
+            console.error('Failed to delete task:', err);
+            setTasks(originalTasks); // Rollback on error
+            toast.error(err.response?.data?.message || 'Failed to delete task');
+            // Re-fetch to ensure UI consistency after rollback/error
+            fetchProjectTasks(); 
             return false;
         }
     };
 
+    /**
+     * Updates filters in URL search parameters.
+     * Also clears the taskId parameter to exit task details view when filters change.
+     * @param {object} newFilters - Object containing new dueDate and/or priority values.
+     */
+    const updateFilters = useCallback((newFilters) => {
+        // Create an object with all potential updates, including clearing taskId
+        const updates = {
+            dueDate: newFilters.dueDate || 'all',
+            priority: newFilters.priority || 'all',
+            taskId: null // Always clear taskId when filters are applied/changed
+        };
+        updateSearchParams(updates);
+    }, [updateSearchParams]);
+
+    // The tasks array directly contains the filtered results from the API.
+    // No client-side filtering needed here as the API is expected to filter.
+
     return {
-        tasks,
+        tasks, // These are already filtered by the API based on URL params
         loading,
         error,
+        filters: { // Expose current filter values and the update function
+            dueDate: dueDateFilter,
+            priority: priorityFilter,
+            updateFilters
+        },
+        selectedTaskId: taskIdFromUrl, // Expose taskId from URL for component to use
         fetchProjectTasks, // Expose for manual re-fetching if needed
         handleCreateTask,
         toggleComplete,
         handleUpdateTask,
-        handleDeleteTaskConfirmed,
+        handleDeleteTaskConfirmed
     };
 };
