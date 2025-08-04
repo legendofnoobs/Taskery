@@ -93,6 +93,44 @@ const TaskCard = ({
     };
 
     /**
+     * Determines the background and text color classes for the due date based on its proximity.
+     * Also returns the display string for the due date.
+     * @param {string} dueDateString - The due date string (e.g., 'YYYY-MM-DD').
+     * @returns {object} An object containing:
+     * - {string} className: Tailwind CSS classes for background and text color.
+     * - {string} displayString: The formatted string to display (e.g., "Due: Today", "Overdue: MM/DD/YYYY").
+     */
+    const getDueDateDisplay = (dueDateString) => {
+        if (!dueDateString) {
+            return {
+                className: 'bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-white',
+                displayString: 'No Due Date'
+            };
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Normalize today to start of day
+
+        const taskDueDate = new Date(dueDateString);
+        taskDueDate.setHours(0, 0, 0, 0); // Normalize task due date to start of day
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0); // Normalize tomorrow to start of day
+
+        if (taskDueDate.getTime() === today.getTime()) {
+            return { className: 'bg-red-500 text-white', displayString: 'Due: Today' }; // Due today
+        } else if (taskDueDate.getTime() === tomorrow.getTime()) {
+            return { className: 'bg-yellow-500 text-gray-900', displayString: 'Due: Tomorrow' }; // Due tomorrow (dark text for contrast)
+        } else if (taskDueDate.getTime() < today.getTime()) {
+            // This case handles overdue tasks (due date is before today)
+            return { className: 'bg-red-800 text-white', displayString: `Overdue: ${new Date(dueDateString).toLocaleDateString()}` }; // Overdue, a darker red
+        } else {
+            return { className: 'bg-green-500 text-white', displayString: `Due: ${new Date(dueDateString).toLocaleDateString()}` }; // Due in the future
+        }
+    };
+
+    /**
      * Truncates a string to a specified number of words and adds an ellipsis if truncated.
      * @param {string} text - The input string.
      * @param {number} wordLimit - The maximum number of words.
@@ -109,6 +147,9 @@ const TaskCard = ({
 
     const truncatedContent = truncateWords(task.content, 15);
     const truncatedDescription = truncateWords(task.description, 25);
+
+    // Get due date display properties
+    const { className: dueDateClassName, displayString: dueDateDisplayString } = getDueDateDisplay(task.dueDate);
 
     return (
         <motion.li // Use motion.li for animation
@@ -151,8 +192,8 @@ const TaskCard = ({
 
                         {/* Due Date */}
                         {task.dueDate && (
-                            <div className="px-2 py-1 text-sm rounded-full bg-gray-200 text-gray-700 dark:text-white dark:bg-zinc-700">
-                                {`Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+                            <div className={`px-2 py-1 text-sm rounded-full ${dueDateClassName}`}>
+                                {dueDateDisplayString}
                             </div>
                         )}
 
