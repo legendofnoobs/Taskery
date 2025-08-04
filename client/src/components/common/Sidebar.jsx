@@ -29,7 +29,7 @@ const Sidebar = () => {
                     </div>
 
                     {/* User Info and Logout */}
-                    <UserInfoAndLogout />
+                    <UserInfoAndLogout closeSidebar={closeSidebar}/>
                 </div>
             </aside>
 

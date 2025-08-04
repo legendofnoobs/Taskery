@@ -1,9 +1,7 @@
 import { Search, Inbox, FolderKanban, FileClock, Cog, Github } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 
-const SidebarNav = ({ closeSidebar,
-    // setShowCreateModal 
-}) => {
+const SidebarNav = ({ closeSidebar }) => {
     const navigate = useNavigate();
     const location = useLocation(); // Get the current location object
 

@@ -3,7 +3,7 @@ import { LogOut, Cog, Github, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../../context/useAuth'; // Adjust path as needed
 import { useNavigate } from 'react-router-dom';
 
-const UserInfoAndLogout = () => {
+const UserInfoAndLogout = ({ closeSidebar }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -13,16 +13,19 @@ const UserInfoAndLogout = () => {
         logout();
         navigate('/login');
         setIsDropdownOpen(false); // Close dropdown after logout
+        closeSidebar()
     };
 
     const handleSettingsClick = () => {
         navigate('/dashboard/settings');
         setIsDropdownOpen(false); // Close dropdown after navigation
+        closeSidebar()
     };
 
     const handleGithubClick = () => {
         window.open('https://github.com/legendofnoobs/Taskery', '_blank', 'noopener noreferrer');
         setIsDropdownOpen(false); // Close dropdown after opening link
+        closeSidebar()
     };
 
     const toggleDropdown = () => {
