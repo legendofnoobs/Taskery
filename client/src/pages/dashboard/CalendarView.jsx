@@ -147,7 +147,7 @@ const CalendarView = () => {
         <div className="md:ml-72 mt-8 px-4 py-6">
             {/* Fixed Header for Calendar View Title */}
             <div className="fixed top-0 left-0 right-0 md:left-72 z-10 bg-white/50 dark:bg-zinc-900/50 px-4 py-6 flex items-center justify-between backdrop-blur-md">
-                <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white ml-12 md:ml-0">
                     <CalendarDays className="w-6 h-6" /> Calendar View
                 </h1>
             </div>
