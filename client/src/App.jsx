@@ -11,6 +11,7 @@ import SearchPage from './pages/dashboard/SearchPage'
 import Settings from './pages/dashboard/Settings'
 import Projects from './pages/dashboard/Projects'
 import { Toaster } from 'react-hot-toast'
+import CalendarView from './pages/dashboard/CalendarView'
 
 function App() {
     return (
@@ -27,6 +28,7 @@ function App() {
                     <Route path="search" element={<SearchPage />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="projects" element={<Projects />} />
+                    <Route path="calendar" element={<CalendarView />} />
                 </Route>
             </Routes>
             <Toaster

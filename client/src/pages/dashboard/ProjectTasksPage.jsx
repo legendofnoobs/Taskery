@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    FolderKanban, ArrowLeft, BadgePlus, MoreVertical, CalendarDays, Flag
+    FolderKanban, ArrowLeft, BadgePlus, MoreVertical, CalendarDays, Flag, ArrowUpNarrowWide, ArrowDownNarrowWide
 } from 'lucide-react';
 import TaskCard from '../../components/common/TaskCard';
 import CreateTaskModal from '../../components/common/CreateTaskModal';
@@ -19,20 +19,25 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
     const [searchParams] = useSearchParams();
     const taskIdFromUrl = searchParams.get('taskId');
 
-    // Get initial filter values from URL or use defaults
-    const initialDueDateFilter = searchParams.get('dueDate') || 'all';
-    const initialPriorityFilter = searchParams.get('priority') || 'all';
+    // New state for default hour increment, specific to this project's task creation
+    const [nextDefaultHour, setNextDefaultHour] = useState(() => (new Date().getHours() + 1) % 24); // Initialize with current hour + 1
 
     const {
         tasks,
         loading,
         error,
         filters,
-        handleCreateTask,
+        handleCreateTask, // This is the original handler from the hook
         toggleComplete,
         handleUpdateTask,
         handleDeleteTaskConfirmed,
     } = useProjectTasks(project);
+
+    // Custom handler to increment default hour after task creation
+    const handleCreateTaskAndIncrementTime = async (taskData) => {
+        await handleCreateTask(taskData); // Call the original task creation logic
+        setNextDefaultHour(prevHour => (prevHour + 1) % 24); // Increment for next task
+    };
 
     const {
         getSortedTasks,
@@ -202,6 +207,7 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                                             className="appearance-none bg-zinc-100 dark:bg-zinc-700 text-gray-900 dark:text-white rounded-md py-1 pl-2 pr-7 text-xs font-medium cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 w-full"
                                         >
                                             <option value="all">All Priorities</option>
+                                            <option value="none">None</option>
                                             <option value="low">Low</option>
                                             <option value="medium">Medium</option>
                                             <option value="high">High</option>
@@ -231,8 +237,8 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
                                     No tasks found
                                 </h3>
                                 <p className="text-gray-500 dark:text-zinc-400 mb-4 max-w-md">
-                                    {filters.dueDate !== 'all' || filters.priority !== 'all' 
-                                        ? 'No tasks match your current filters' 
+                                    {filters.dueDate !== 'all' || filters.priority !== 'all'
+                                        ? 'No tasks match your current filters'
                                         : 'Get started by creating your first task for this project'}
                                 </p>
                                 <button
@@ -323,9 +329,10 @@ const ProjectTasksPage = ({ project, onBackToProjects }) => {
             <CreateTaskModal
                 isOpen={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
-                onTaskCreated={handleCreateTask}
+                onTaskCreated={handleCreateTaskAndIncrementTime} // Use the new handler
                 defaultProjectId={project._id}
                 defaultDueDate={defaultTodayDate}
+                nextDefaultHour={nextDefaultHour} // Pass the new prop
             />
 
             <EditTaskModal

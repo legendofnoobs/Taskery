@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BadgePlus, Inbox, ArrowLeft, CalendarDays, Flag, MoreVertical } from 'lucide-react'; // Added MoreVertical for options menu
+import { BadgePlus, Inbox, ArrowLeft, CalendarDays, Flag, MoreVertical, ArrowUpNarrowWide, ArrowDownNarrowWide } from 'lucide-react'; // Added MoreVertical for options menu
 import CreateTaskModal from '../../components/common/CreateTaskModal';
 import EditTaskModal from '../../components/common/EditTaskModal';
 import DeleteConfirmationModal from '../../components/common/DeleteConfirmationModal';
@@ -16,6 +16,9 @@ const InboxPage = () => {
     const [selectedDueDateFilter, setSelectedDueDateFilter] = useState('all');
     const [selectedPriorityFilter, setSelectedPriorityFilter] = useState('all');
 
+    // New state for default hour increment
+    const [nextDefaultHour, setNextDefaultHour] = useState(() => (new Date().getHours() + 1) % 24); // Initialize with current hour + 1
+
     // Use the custom hook for task data and API interactions, passing filters
     const {
         tasks,
@@ -30,6 +33,12 @@ const InboxPage = () => {
         handleTaskCardClick,
         handleBackToInbox,
     } = useInboxTasks(selectedDueDateFilter, selectedPriorityFilter); // Pass filter states here
+
+    // Custom handler to increment default hour after task creation
+    const handleCreateTaskAndIncrementTime = async (taskData) => {
+        await handleCreateTask(taskData);
+        setNextDefaultHour(prevHour => (prevHour + 1) % 24); // Increment for next task
+    };
 
     // Use the custom hook for sorting logic
     const {
@@ -125,13 +134,14 @@ const InboxPage = () => {
         <div className="md:ml-72 mt-8 px-4 py-6">
             {/* Fixed Header for Inbox Title and Add Task Button */}
             <div className="fixed top-0 left-0 right-0 md:left-72 z-10 bg-white/50 dark:bg-zinc-900/50 px-4 py-6 flex items-center justify-between backdrop-blur-md">
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 mb-0'>
                     <button className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors mr-2 block md:hidden" aria-label="Back to Inbox">
                         <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" />
                     </button>
                     <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white"><Inbox className="w-6 h-6" /> Inbox</h1>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4 justify-end"> {/* Simplified flex for the right side */}
+                    {/* Options Menu Button */}
                     <button
                         onClick={() => {
                             if (!selectedProjectId) {
@@ -146,11 +156,10 @@ const InboxPage = () => {
                         <BadgePlus className="w-4 h-4" />
                         <span className='hidden lg:block'>Add Task</span>
                     </button>
-                    {/* Options Menu Button */}
                     <div className="relative" ref={optionsMenuRef}>
                         <button
                             onClick={() => setShowOptionsMenu(prev => !prev)}
-                            className="p-2 rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-100/10 transition-colors text-gray-900 dark:text-white focus:bg-zinc-100/10"
+                            className="p-2 rounded-full hover:bg-zinc-300 dark:hover:bg-zinc-100/10 transition-colors text-gray-900 dark:text-white"
                             aria-label="Task Options"
                         >
                             <MoreVertical className="w-5 h-5" />
@@ -198,6 +207,7 @@ const InboxPage = () => {
                                             className="appearance-none bg-zinc-100 dark:bg-zinc-700 text-gray-900 dark:text-white rounded-md py-1 pl-2 pr-7 text-xs font-medium cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors focus:outline-none focus:ring-1 focus:ring-blue-500 w-full"
                                         >
                                             <option value="all">All Priorities</option>
+                                            <option value="none">None</option>
                                             <option value="low">Low</option>
                                             <option value="medium">Medium</option>
                                             <option value="high">High</option>
@@ -209,6 +219,8 @@ const InboxPage = () => {
                             </div>
                         )}
                     </div>
+
+                    
                 </div>
             </div>
 
@@ -305,9 +317,10 @@ const InboxPage = () => {
             <CreateTaskModal
                 isOpen={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
-                onTaskCreated={handleCreateTask}
+                onTaskCreated={handleCreateTaskAndIncrementTime} // Use the new handler
                 defaultProjectId={selectedProjectId}
                 defaultDueDate={defaultTodayDate}
+                nextDefaultHour={nextDefaultHour} // Pass the new prop
             />
 
             <EditTaskModal

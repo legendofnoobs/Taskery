@@ -3,19 +3,20 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Add defaultProjectId as a prop
-const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, defaultDueDate }) => { // Added defaultDueDate prop
+// Add defaultProjectId, defaultDueDate, and nextDefaultHour as props
+const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, defaultDueDate, nextDefaultHour }) => {
     const [content, setContent] = useState('');
     const [description, setDescription] = useState('');
     const [tags, setTags] = useState('');
     const [dueDate, setDueDate] = useState(''); // Stores YYYY-MM-DD string
+    const [time, setTime] = useState(''); // Stores HH:MM string
     const [priority, setPriority] = useState(1);
     const [projects, setProjects] = useState([]);
     const [selectedProjectId, setSelectedProjectId] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // Effect to fetch user's projects and set default project/due date
+    // Effect to fetch user's projects and set default project/due date/time
     useEffect(() => {
         const fetchProjects = async () => {
             setLoading(true);
@@ -28,18 +29,15 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, def
                 }
 
                 if (defaultProjectId) {
-                    // If defaultProjectId is provided, use it directly
                     setSelectedProjectId(defaultProjectId);
-                    setProjects([]); // No need to fetch projects if one is already set
+                    setProjects([]); // No need to fetch all projects if defaultProjectId is provided
                 } else {
-                    // Otherwise, fetch all projects
                     const res = await axios.get(`${API_URL}/projects`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     const userProjects = res.data || [];
                     setProjects(userProjects);
 
-                    // Set default selected project: inbox if available, otherwise the first project
                     const inboxProject = userProjects.find(p => p.isInbox);
                     if (inboxProject) {
                         setSelectedProjectId(inboxProject._id);
@@ -59,20 +57,32 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, def
 
         if (isOpen) {
             fetchProjects();
-            // Set default due date to today if defaultDueDate prop is provided
-            if (defaultDueDate) {
-                setDueDate(defaultDueDate);
-            } else {
-                // Optionally, set to empty string if no default is desired and modal is opened
-                setDueDate('');
-            }
+
+            // Calculate current local date for default
+            const now = new Date();
+            const todayFormatted = [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, '0'),
+                String(now.getDate()).padStart(2, '0')
+            ].join('-');
+
+            // Set default due date:
+            // Prioritize defaultDueDate if it's explicitly provided AND different from today's actual date.
+            // Otherwise, always use today's actual date to prevent stale 'yesterday' dates.
+            setDueDate(defaultDueDate && defaultDueDate !== todayFormatted ? defaultDueDate : todayFormatted);
+
+            // Set default time based on nextDefaultHour prop (already correctly formatted by parent)
+            const formattedHour = String(nextDefaultHour).padStart(2, '0');
+            const formattedMinutes = String(now.getMinutes()).padStart(2, '0');
+            setTime(`${formattedHour}:${formattedMinutes}`);
+
             // Reset other form fields when modal opens
             setContent('');
             setDescription('');
             setTags('');
             setPriority(1);
         }
-    }, [isOpen, defaultProjectId, defaultDueDate]); // Depend on isOpen, defaultProjectId, and defaultDueDate
+    }, [isOpen, defaultProjectId, defaultDueDate, nextDefaultHour]); // Depend on nextDefaultHour
 
     const handleCreate = async () => {
         if (!content.trim()) {
@@ -88,12 +98,27 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, def
         setError(null);
 
         try {
+            // Combine dueDate and time into a single Date object
+            let finalDueDate = null;
+            if (dueDate) {
+                const datePart = dueDate; // YYYY-MM-DD
+                const timePart = time || '00:00'; // HH:MM, default to 00:00 if not set
+                // Construct a Date object using ISO 8601 format for consistency
+                finalDueDate = new Date(`${datePart}T${timePart}:00`);
+                // Ensure it's a valid date
+                if (isNaN(finalDueDate.getTime())) {
+                    setError('Invalid due date or time.');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             const taskData = {
                 content,
                 description,
                 projectId: selectedProjectId,
                 tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-                dueDate, // dueDate is already in YYYY-MM-DD format
+                dueDate: finalDueDate ? finalDueDate.toISOString() : null, // Send as ISO string or null
                 priority
             };
             await onTaskCreated?.(taskData);
@@ -103,6 +128,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, def
             setDescription('');
             setTags('');
             setDueDate(''); // Clear due date after creation
+            setTime(''); // Clear time after creation
             setPriority(1);
 
             onClose();
@@ -138,18 +164,26 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated, defaultProjectId, def
                     onChange={e => setDescription(e.target.value)}
                 />
                 <input
-                    type="text" // Changed to text to allow placeholder for date, or keep as date if you want native picker
+                    type="text"
                     placeholder="Tags (comma separated)"
                     className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={tags}
                     onChange={e => setTags(e.target.value)}
                 />
-                <input
-                    type="date"
-                    className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={dueDate}
-                    onChange={e => setDueDate(e.target.value)}
-                />
+                <div className="flex gap-2 mb-3">
+                    <input
+                        type="date"
+                        className="w-1/2 border border-gray-300 p-2 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        value={dueDate}
+                        onChange={e => setDueDate(e.target.value)}
+                    />
+                    <input
+                        type="time"
+                        className="w-1/2 border border-gray-300 p-2 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        value={time}
+                        onChange={e => setTime(e.target.value)}
+                    />
+                </div>
                 <select
                     className="w-full border dark:border-zinc-700 dark:bg-zinc-800 p-2 mb-3 rounded dark:focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={priority}

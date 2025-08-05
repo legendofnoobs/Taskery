@@ -1,4 +1,3 @@
-// components/common/EditTaskModal.jsx
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
@@ -9,6 +8,7 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
     const [description, setDescription] = useState('')
     const [tags, setTags] = useState('')
     const [dueDate, setDueDate] = useState('')
+    const [time, setTime] = useState('') // New state for time
     const [priority, setPriority] = useState(1)
     const [selectedProjectId, setSelectedProjectId] = useState('')
     const [projects, setProjects] = useState([])
@@ -20,7 +20,20 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
             setContent(task.content || '')
             setDescription(task.description || '')
             setTags(task.tags?.join(', ') || '')
-            setDueDate(task.dueDate?.slice(0, 10) || '')
+            
+            // Extract date and time from task.dueDate
+            if (task.dueDate) {
+                const taskDate = new Date(task.dueDate);
+                setDueDate(taskDate.toISOString().slice(0, 10)); // YYYY-MM-DD
+                // Format time as HH:MM
+                const hours = taskDate.getHours().toString().padStart(2, '0');
+                const minutes = taskDate.getMinutes().toString().padStart(2, '0');
+                setTime(`${hours}:${minutes}`);
+            } else {
+                setDueDate('');
+                setTime('');
+            }
+
             setPriority(task.priority || 1)
             setSelectedProjectId(task.projectId || '')
         }
@@ -52,14 +65,30 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
         }
 
         setLoading(true)
+        setError(null); // Clear previous errors
         const token = localStorage.getItem('token')
 
         try {
+            // Combine dueDate and time into a single Date object
+            let finalDueDate = null;
+            if (dueDate) {
+                const datePart = dueDate; // YYYY-MM-DD
+                const timePart = time || '00:00'; // HH:MM, default to 00:00 if not set
+                // Construct a Date object using ISO 8601 format for consistency
+                finalDueDate = new Date(`${datePart}T${timePart}:00`);
+                // Ensure it's a valid date
+                if (isNaN(finalDueDate.getTime())) {
+                    setError('Invalid due date or time.');
+                    setLoading(false);
+                    return;
+                }
+            }
+
             const response = await axios.put(`${API_URL}/tasks/${task._id}`, {
                 content,
                 description,
                 tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-                dueDate,
+                dueDate: finalDueDate ? finalDueDate.toISOString() : null, // Send as ISO string or null
                 priority,
                 projectId: selectedProjectId
             }, {
@@ -87,7 +116,22 @@ const EditTaskModal = ({ isOpen, onClose, task, onUpdate }) => {
                 <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={content} onChange={e => setContent(e.target.value)} placeholder="Task content" />
                 <textarea className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
                 <input className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={tags} onChange={e => setTags(e.target.value)} placeholder="Tags (comma separated)" />
-                <input type="date" className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                
+                <div className="flex gap-2 mb-3"> {/* Flex container for date and time inputs */}
+                    <input 
+                        type="date" 
+                        className="w-1/2 border border-gray-300 p-2 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        value={dueDate} 
+                        onChange={e => setDueDate(e.target.value)} 
+                    />
+                    <input 
+                        type="time" 
+                        className="w-1/2 border border-gray-300 p-2 rounded dark:border-zinc-700 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                        value={time} 
+                        onChange={e => setTime(e.target.value)} 
+                    />
+                </div>
+
                 <select className="w-full border border-gray-300 p-2 mb-3 rounded dark:border-zinc-700 dark:bg-zinc-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={priority} onChange={e => setPriority(Number(e.target.value))}>
                     <option value={1}>Low</option>
                     <option value={2}>Medium</option>

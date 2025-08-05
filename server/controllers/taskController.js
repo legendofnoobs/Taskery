@@ -362,3 +362,15 @@ export async function getSubtaskCompletionPercentage(req, res) {
         res.status(500).json({ message: "Failed to calculate completion", error });
     }
 }
+
+export async function getAllTasksForUser(req, res) {
+    try {
+        const userId = req.user._id; // Assuming authMiddleware populates req.user
+        const tasks = await Task.find({ ownerId: userId });
+
+        res.status(200).json(tasks);
+    } catch (error) {
+        console.error("Error fetching all tasks for user:", error);
+        res.status(500).json({ message: "Failed to fetch tasks", error: error.message });
+    }
+}

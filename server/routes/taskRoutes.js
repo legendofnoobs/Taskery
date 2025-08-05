@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createTask, getTasksByProject, getTaskById, updateTask, deleteTask, completeTask, uncompleteTask, getSubtasks, getSubtaskCompletionPercentage, searchTasks  } from "../controllers/taskController.js";
+import { createTask, getTasksByProject, getTaskById, updateTask, deleteTask, completeTask, uncompleteTask, getSubtasks, getSubtaskCompletionPercentage, searchTasks, getAllTasksForUser  } from "../controllers/taskController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = Router();
@@ -23,5 +23,7 @@ router.get("/completion/:parentId", getSubtaskCompletionPercentage);
 router.get('/search', searchTasks); // This should come before /:id
 
 router.get("/:id", getTaskById);
+
+router.get("/", getAllTasksForUser); // Get all tasks for a user  // ADD THIS LINE
 
 export default router;

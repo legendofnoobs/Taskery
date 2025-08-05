@@ -17,7 +17,7 @@ const DashboardLayout = () => {
     return (
         <div className="flex min-h-screen bg-gray-200 dark:bg-zinc-900 w-full">
             <Sidebar />
-            <main className="flex-1 p-4 max-w-6xl mx-auto">
+            <main className="flex-1 p-4 max-w-7xl mx-auto">
                 <Outlet /> {/* Render nested routes here */}
             </main>
         </div>
