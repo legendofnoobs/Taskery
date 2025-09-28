@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNotes } from '../../hooks/useNotes';
 import CreateNoteModal from '../../components/common/CreateNoteModal';
 import EditNoteModal from '../../components/common/EditNoteModal';
@@ -12,6 +12,22 @@ function NotesPage() {
     const [isEditModalOpen, setEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedNote, setSelectedNote] = useState(null);
+
+    const [openDropdownId, setOpenDropdownId] = useState(null);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpenDropdownId(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [openDropdownId]);
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -58,6 +74,9 @@ function NotesPage() {
                         note={note}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        openDropdownId={openDropdownId}
+                        setOpenDropdownId={setOpenDropdownId}
+                        dropdownRef={dropdownRef}
                     />
                 ))}
             </div>

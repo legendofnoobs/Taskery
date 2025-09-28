@@ -9,6 +9,7 @@ import projectRoutes from './routes/projectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import activityLogRoutes from './routes/activityLogRoutes.js';
 import noteRoutes from './routes/noteRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -30,6 +31,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/search', searchRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;

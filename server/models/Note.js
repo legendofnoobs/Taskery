@@ -8,6 +8,8 @@ const noteSchema = new mongoose.Schema({
     timestamps: true
 });
 
+noteSchema.index({ title: 'text', content: 'text' });
+
 const Note = mongoose.model('Note', noteSchema);
 
 export default Note;

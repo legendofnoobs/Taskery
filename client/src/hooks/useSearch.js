@@ -1,11 +1,10 @@
-// src/hooks/useSearchTasks.js
 import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export const useSearchTasks = () => {
+export const useSearch = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -13,12 +12,11 @@ export const useSearchTasks = () => {
 
     const token = localStorage.getItem('token');
 
-    // Function to perform the search
     const performSearch = async (query) => {
         if (!query.trim()) {
             setSearchResults([]);
             setError(null);
-            return; // Don't search for empty queries
+            return;
         }
 
         setLoading(true);
@@ -31,9 +29,9 @@ export const useSearchTasks = () => {
                 return;
             }
 
-            const res = await axios.get(`${API_URL}/tasks/search`, {
+            const res = await axios.get(`${API_URL}/search`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { query: query } // Pass the search query as a URL parameter
+                params: { query: query }
             });
             setSearchResults(res.data);
         } catch (err) {
@@ -44,64 +42,57 @@ export const useSearchTasks = () => {
         }
     };
 
-    // Handler for search input change (triggers search immediately)
     const handleSearchChange = (e) => {
         const query = e.target.value;
         setSearchQuery(query);
-        performSearch(query); // Perform search on every change
+        performSearch(query);
     };
 
-    // Handles the update of an existing task in search results
-    const handleUpdateTask = async (updated) => {
+    const updateSearchResult = async (item) => {
         try {
-            await axios.put(`${API_URL}/tasks/${updated._id}`, updated, {
+            const url = `${API_URL}/${item.type}s/${item._id}`;
+            await axios.put(url, item, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Update the task in searchResults directly
-            setSearchResults(prev => prev.map(t => t._id === updated._id ? updated : t));
-            toast.success('Task Updated!');
+            setSearchResults(prev => prev.map(r => r._id === item._id ? item : r));
+            toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} Updated!`);
             return true;
         } catch (err) {
-            console.error('Failed to update task:', err);
-            setError(err.response?.data?.message || 'Failed to update task.');
+            console.error(`Failed to update ${item.type}:`, err);
+            toast.error(err.response?.data?.message || `Failed to update ${item.type}.`);
             return false;
         }
     };
 
-    // Handles the deletion of a task from search results
-    const handleDeleteTaskConfirmed = async (taskId) => {
+    const deleteSearchResult = async (item) => {
         try {
-            await axios.delete(`${API_URL}/tasks/${taskId}`, {
+            const url = `${API_URL}/${item.type}s/${item._id}`;
+            await axios.delete(url, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Filter out the deleted task from searchResults
-            setSearchResults(prev => prev.filter(t => t._id !== taskId));
-            toast.success('Task Deleted!');
+            setSearchResults(prev => prev.filter(r => r._id !== item._id));
+            toast.success(`${item.type.charAt(0).toUpperCase() + item.type.slice(1)} Deleted!`);
             return true;
         } catch (err) {
-            console.error('Failed to delete task:', err);
-            setError(err.response?.data?.message || 'Failed to delete task.');
+            console.error(`Failed to delete ${item.type}:`, err);
+            toast.error(err.response?.data?.message || `Failed to delete ${item.type}.`);
             return false;
         }
     };
 
-    // Toggles the completion status of a task in search results
     const toggleComplete = async (task) => {
+        if (task.type !== 'task') return;
         try {
             const endpoint = task.isCompleted ? 'uncomplete' : 'complete';
             const res = await axios.patch(`${API_URL}/tasks/${task._id}/${endpoint}`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
-            // Update the specific task in searchResults to trigger re-render
-            setSearchResults(prev =>
-                prev.map(t => (t._id === task._id ? res.data : t))
-            );
+            setSearchResults(prev => prev.map(t => (t._id === task._id ? res.data : t)));
             if (task.isCompleted) toast.error('Task Uncompleted!');
             else toast.success('Task Completed!');
         } catch (err) {
             console.error(`Failed to ${task.isCompleted ? 'uncomplete' : 'complete'} task`, err);
-            setError(err.response?.data?.message || `Failed to ${task.isCompleted ? 'uncomplete' : 'complete'} task`);
+            toast.error(err.response?.data?.message || `Failed to ${task.isCompleted ? 'uncomplete' : 'complete'} task`);
         }
     };
 
@@ -111,8 +102,8 @@ export const useSearchTasks = () => {
         loading,
         error,
         handleSearchChange,
-        handleUpdateTask,
-        handleDeleteTaskConfirmed,
+        updateSearchResult,
+        deleteSearchResult,
         toggleComplete,
     };
 };
