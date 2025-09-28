@@ -1,4 +1,4 @@
-import { Search, Inbox, FolderKanban, FileClock, Cog, Github } from 'lucide-react';
+import { Search, Inbox, FolderKanban, FileClock, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 
 const SidebarNav = ({ closeSidebar }) => {
@@ -8,8 +8,9 @@ const SidebarNav = ({ closeSidebar }) => {
     const navItems = [
         { icon: Search, name: 'Search', path: '/dashboard/search' },
         { icon: Inbox, name: 'Inbox', path: '/dashboard/inbox' },
+        { icon: FileText, name: 'Notes', path: '/dashboard/notes' },
         { icon: FolderKanban, name: 'Projects', path: '/dashboard/projects' },
-        { icon: FileClock, name: 'Activity Log', path: '/dashboard/activity-log' }
+        { icon: FileClock, name: 'Activity Log', path: '/dashboard/activity-log' },
     ];
 
     return (

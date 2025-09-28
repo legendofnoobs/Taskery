@@ -10,6 +10,7 @@ import ActivityLog from './pages/dashboard/ActivityLog'
 import SearchPage from './pages/dashboard/SearchPage'
 import Settings from './pages/dashboard/Settings'
 import Projects from './pages/dashboard/Projects'
+import NotesPage from './pages/dashboard/NotesPage'
 import { Toaster } from 'react-hot-toast'
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
                     <Route path="search" element={<SearchPage />} />
                     <Route path="settings" element={<Settings />} />
                     <Route path="projects" element={<Projects />} />
+                    <Route path="notes" element={<NotesPage />} />
                 </Route>
             </Routes>
             <Toaster
