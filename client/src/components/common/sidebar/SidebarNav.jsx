@@ -1,4 +1,4 @@
-import { Search, Inbox, FolderKanban, FileClock, FileText } from 'lucide-react';
+import { Search, Inbox, FolderKanban, FileClock, FileText, Brain } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 
 const SidebarNav = ({ closeSidebar }) => {
@@ -6,8 +6,9 @@ const SidebarNav = ({ closeSidebar }) => {
     const location = useLocation(); // Get the current location object
 
     const navItems = [
-        { icon: Search, name: 'Search', path: '/dashboard/search' },
         { icon: Inbox, name: 'Inbox', path: '/dashboard/inbox' },
+        { icon: Brain, name: 'Assistant', path: '/dashboard/ai-chat' },
+        { icon: Search, name: 'Search', path: '/dashboard/search' },
         { icon: FileText, name: 'Notes', path: '/dashboard/notes' },
         { icon: FolderKanban, name: 'Projects', path: '/dashboard/projects' },
         { icon: FileClock, name: 'Activity Log', path: '/dashboard/activity-log' },
