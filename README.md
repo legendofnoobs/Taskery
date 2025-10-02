@@ -1,6 +1,6 @@
-# Taskery - A MERN Stack Task Manager
+# Taskery - An AI-powered MERN Stack Task Manager
 
-> **Taskery** is a full-stack task management application built with the MERN (MongoDB, Express.js, React.js, Node.js) stack. It helps you organize your projects and tasks efficiently with a clean, modern, and intuitive user interface.
+> **Taskery** is an AI-powered full-stack task management application built with the MERN (MongoDB, Express.js, React.js, Node.js) stack. It helps you organize your projects and tasks efficiently with a clean, modern, and intuitive user interface.
 
 ---
 
@@ -9,7 +9,9 @@
 - **User Authentication**: Secure registration and login using JWT. Passwords are hashed with bcryptjs.
 - **Project Management**: Create, view, update, and delete projects. Edit project details and manage favorite projects.
 - **Task Management**: Add, edit, delete, and view tasks within projects. Tasks can be sorted, searched, and filtered.
-- **Favorite Projects**: Mark/unmark projects as favorites for quick access. Favorites are shown in a dedicated sidebar section.
+- **Notes Management**: Create, view, update, and delete notes.
+- **AI Chat**: An AI-powered chat feature to help you with your tasks. AI can do operations
+
 - **Inbox**: View all tasks assigned to you across all projects in a single inbox page.
 - **Activity Log**: Track all user and project activities (create, update, delete) in a dashboard log.
 - **Search**: Search tasks across all projects with instant results.
@@ -37,6 +39,9 @@
 - **JWT** (authentication)
 - **bcryptjs** (password hashing)
 - **dotenv** (env management)
+
+### AI
+- **Gemini** (Using their free Api)
 
 ---
 
@@ -169,6 +174,16 @@ task-manager/
 - `PUT /api/tasks/:taskId` — Update task
 - `DELETE /api/tasks/:taskId` — Delete task
 
+### Notes
+- `GET /api/notes` — List all user notes
+- `POST /api/notes` — Create note
+- `GET /api/notes/:id` — Get note by ID
+- `PUT /api/notes/:id` — Update note
+- `DELETE /api/notes/:id` — Delete note
+
+### AI Chat
+- `POST /api/ai/chat` — Send a message to the AI chat
+
 ### Activity Log
 - `GET /api/activity-logs` — List activity logs
 
@@ -186,6 +201,8 @@ task-manager/
 - `useAuth` — Auth state and actions
 - `useProjects` — Project CRUD
 - `useProjectTasks` — Task CRUD
+- `useNotes` — Notes CRUD
+- `useAiChat` — AI Chat
 - `useFavoriteProjects` — Favorite/unfavorite logic
 - `useInboxTasks` — Inbox logic
 - `useActivityLogs` — Activity log fetch
